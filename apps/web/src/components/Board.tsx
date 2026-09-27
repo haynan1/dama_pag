@@ -33,14 +33,61 @@ export interface BoardProps {
   readonly arrows?: readonly BoardArrow[];
   /** Casas destacadas com anel (ex.: peça sugerida pelo mentor). */
   readonly highlight?: readonly number[];
+  /**
+   * Ritmo da animação do último lance. Numa partida os lances são encenados: a peça se ergue,
+   * percorre cada salto e as capturas somem em sequência. `opponent` ainda dá um respiro antes,
+   * separando o lance do adversário do seu; `own` sai na hora, para não parecer atraso ao toque.
+   * `quick` é para navegar por lances (revisão, análise).
+   */
+  readonly pace?: Pace;
   readonly label: string;
 }
+
+interface Tempo {
+  /** Respiro antes de a peça sair: separa o lance do adversário do seu. */
+  readonly beat: number;
+  readonly lift: number;
+  readonly hop: number;
+  /** Parada em cada casa de pouso entre capturas. */
+  readonly rest: number;
+  readonly land: number;
+  readonly vanish: number;
+}
+
+export type Pace = 'quick' | 'own' | 'opponent';
+
+const STAGED = {
+  simple: { beat: 0, lift: 170, hop: 460, rest: 0, land: 190, vanish: 360 },
+  capture: { beat: 0, lift: 170, hop: 400, rest: 130, land: 190, vanish: 360 },
+} satisfies Record<string, Tempo>;
+
+const TEMPO: Record<Pace, { simple: Tempo; capture: Tempo }> = {
+  quick: {
+    simple: { beat: 0, lift: 0, hop: 230, rest: 0, land: 0, vanish: 260 },
+    capture: { beat: 0, lift: 0, hop: 190, rest: 0, land: 0, vanish: 260 },
+  },
+  own: STAGED,
+  opponent: {
+    simple: { ...STAGED.simple, beat: 260 },
+    capture: { ...STAGED.capture, beat: 260 },
+  },
+};
+
+/** Quanto falta para a animação acabar (ms), incluindo o atraso inicial. */
+function remaining(anim: Animation): number {
+  const end = Number(anim.effect?.getComputedTiming().endTime ?? 0);
+  return Math.max(0, end - Number(anim.currentTime ?? 0));
+}
+
+const REST = 'drop-shadow(0 0 0 rgb(0 0 0 / 0))';
+const LIFTED = 'drop-shadow(0 14px 12px rgb(0 0 0 / 0.5))';
 
 interface Ghost {
   readonly id: string;
   readonly sq: number;
   readonly piece: number;
   readonly delay: number;
+  readonly duration: number;
 }
 
 const PIECE_NAMES: Record<string, string> = {
@@ -51,7 +98,18 @@ const PIECE_NAMES: Record<string, string> = {
 };
 
 export function Board(props: BoardProps) {
-  const { variant, fen, orientation, movable, onMove, lastMove, arrows = [], highlight = [], label } = props;
+  const {
+    variant,
+    fen,
+    orientation,
+    movable,
+    onMove,
+    lastMove,
+    arrows = [],
+    highlight = [],
+    pace = 'quick',
+    label,
+  } = props;
   const size = VARIANTS[variant].size;
   const geo = geometry(size);
   const position = useMemo(() => Position.fromFen(variant, fen), [variant, fen]);
@@ -97,60 +155,160 @@ export function Board(props: BoardProps) {
   // Lido por ref: a animação só deve reiniciar quando a posição muda, não a cada render.
   const lastMoveRef = useRef(lastMove);
   lastMoveRef.current = lastMove;
+  const paceRef = useRef(pace);
+  paceRef.current = pace;
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
+  // Animações em curso: o lance seguinte espera o anterior terminar em vez de cortá-lo.
+  const animsRef = useRef(new Set<Animation>());
+  const ghostTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  // Lance feito arrastando: a peça já está no destino, não volta para refazer o caminho.
+  const droppedRef = useRef(false);
   const reducedMotion = useMemo(
     () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches,
     [],
   );
 
+  useEffect(() => {
+    const timers = ghostTimers.current;
+    return () => {
+      for (const t of timers) clearTimeout(t);
+    };
+  }, []);
+
+  const addGhosts = (batch: Ghost[], lifetime: number) => {
+    setGhosts((g) => [...g, ...batch]);
+    const ids = new Set(batch.map((b) => b.id));
+    const timer = setTimeout(() => {
+      ghostTimers.current.delete(timer);
+      setGhosts((g) => g.filter((x) => !ids.has(x.id)));
+    }, lifetime);
+    ghostTimers.current.add(timer);
+  };
+
+  const finishAll = () => {
+    for (const a of animsRef.current) a.finish();
+    animsRef.current.clear();
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: dispara só na troca de posição.
   useLayoutEffect(() => {
     const lastMove = lastMoveRef.current;
     const prev = prevRef.current;
+    const dropped = droppedRef.current;
+    droppedRef.current = false;
     prevRef.current = { fen, board: position.board.slice() };
     if (!prev || prev.fen === fen || !lastMove || reducedMotion) return;
     const from = lastMove.path[0]!;
     const to = lastMove.path[lastMove.path.length - 1]!;
-    // Só anima se a transição corresponde de fato ao último lance.
-    if (prev.board[from] === 0 || position.board[to] === 0 || (from !== to && position.board[from] !== 0))
-      return;
     const el = pieceRefs.current.get(to);
     const board = boardRef.current;
-    if (!el || !board) return;
-    const cell = board.clientWidth / size;
-    const end = visual(to);
-    const hopMs = lastMove.captures.length > 0 ? 190 : 230;
-    const frames = lastMove.path.map((sq) => {
-      const v = visual(sq);
-      return { transform: `translate(${(v.x - end.x) * cell}px, ${(v.y - end.y) * cell}px) scale(1)` };
-    });
-    // Leve "salto" em cada captura.
-    const withLift = frames.flatMap((f, i) =>
-      i === 0 || lastMove.captures.length === 0
-        ? [f]
-        : [{ ...f, transform: f.transform.replace('scale(1)', 'scale(1.08)') }, f],
-    );
-    const anim = el.animate(withLift, {
-      duration: hopMs * (lastMove.path.length - 1),
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    });
-    if (lastMove.captures.length > 0) {
-      setGhosts(
+    // Só anima se a transição corresponde de fato ao último lance (desfazer, carregar posição: salta).
+    if (
+      prev.board[from] === 0 ||
+      position.board[to] === 0 ||
+      (from !== to && position.board[from] !== 0) ||
+      !el ||
+      !board
+    ) {
+      finishAll();
+      return;
+    }
+
+    const capturing = lastMove.captures.length > 0;
+    const captured = (delay: (i: number) => number, vanish: number, lifetime: number) =>
+      addGhosts(
         lastMove.captures.map((sq, i) => ({
           id: `${fen}:${sq}`,
           sq,
           piece: prev.board[sq]!,
-          delay: hopMs * (i + 0.6),
+          delay: delay(i),
+          duration: vanish,
         })),
+        lifetime,
       );
-      const t = setTimeout(() => setGhosts([]), hopMs * (lastMove.captures.length + 2));
-      return () => {
-        clearTimeout(t);
-        anim.cancel();
-      };
+
+    if (dropped) {
+      finishAll();
+      if (capturing) captured(() => 0, 260, 300);
+      return;
     }
-    return () => anim.cancel();
+
+    // A mesma peça de novo (análise, lances seguidos): encerra a anterior; outra peça: entra na fila.
+    let wait = 0;
+    for (const a of animsRef.current) {
+      if ((a.effect as KeyframeEffect | null)?.target === el) {
+        a.finish();
+        animsRef.current.delete(a);
+      } else wait = Math.max(wait, remaining(a));
+    }
+
+    const tempo = TEMPO[paceRef.current][capturing ? 'capture' : 'simple'];
+    const hops = lastMove.path.length - 1;
+    const cell = board.clientWidth / size;
+    const end = visual(to);
+    const at = (sq: number, scale: number) => {
+      const v = visual(sq);
+      return `translate(${(v.x - end.x) * cell}px, ${(v.y - end.y) * cell}px) scale(${scale})`;
+    };
+    // A peça erguida flutua acima das outras; no ritmo rápido só as capturas dão um leve salto.
+    const up = tempo.lift > 0 ? 1.1 : capturing ? 1.08 : 1;
+
+    // Linha do tempo em ms; os offsets saem dela no final.
+    const timeline: { t: number; transform: string; filter: string; easing: string }[] = [];
+    let t = 0;
+    const mark = (transform: string, lifted: boolean, easing: string) =>
+      timeline.push({ t, transform, filter: lifted ? LIFTED : REST, easing });
+    const HOP_EASE = tempo.lift > 0 ? 'cubic-bezier(0.45, 0, 0.2, 1)' : 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+    if (tempo.lift > 0) {
+      mark(at(from, 1), false, 'cubic-bezier(0.2, 0, 0, 1)');
+      t += tempo.lift;
+    }
+    mark(at(from, up), tempo.lift > 0, HOP_EASE);
+    const passOver: number[] = [];
+    for (let i = 1; i <= hops; i++) {
+      passOver.push(t + tempo.hop * 0.55);
+      t += tempo.hop;
+      const landing = i === hops;
+      mark(at(lastMove.path[i]!, landing && tempo.land === 0 ? 1 : up), tempo.lift > 0, HOP_EASE);
+      if (!landing && tempo.rest > 0) {
+        t += tempo.rest;
+        mark(at(lastMove.path[i]!, up), true, HOP_EASE);
+      }
+    }
+    if (tempo.land > 0) {
+      timeline[timeline.length - 1]!.easing = 'cubic-bezier(0.34, 1.5, 0.64, 1)';
+      t += tempo.land;
+      mark(at(to, 1), false, 'linear');
+    }
+
+    const duration = Math.max(t, 1);
+    const delay = wait + tempo.beat;
+    const anim = el.animate(
+      timeline.map((f) => ({
+        offset: f.t / duration,
+        transform: f.transform,
+        filter: f.filter,
+        easing: f.easing,
+        zIndex: 6,
+      })),
+      // `backwards`: na fila e no respiro inicial a peça segue visível na casa de origem.
+      { duration, delay, fill: 'backwards' },
+    );
+    animsRef.current.add(anim);
+    const done = () => animsRef.current.delete(anim);
+    anim.onfinish = done;
+    anim.oncancel = done;
+
+    if (capturing) captured((i) => delay + (passOver[i] ?? t), tempo.vanish, delay + duration + tempo.vanish);
   }, [fen]);
+
+  // Qualquer interação do usuário tem prioridade: conclui a encenação na hora.
+  const skipAnimation = () => {
+    if (animsRef.current.size === 0) return;
+    finishAll();
+    setGhosts([]);
+  };
 
   // --- Interação -------------------------------------------------------------------------------
   const commit = useCallback(
@@ -224,8 +382,10 @@ export function Board(props: BoardProps) {
       suppressClick.current = true;
       const target = squareFromPoint(e.clientX, e.clientY);
       const options = legal.filter((m) => m.from === drag.sq && m.to === target);
-      if (options.length === 1) commit(options[0]!);
-      else if (options.length > 1) setCandidates(options);
+      if (options.length === 1) {
+        droppedRef.current = true;
+        commit(options[0]!);
+      } else if (options.length > 1) setCandidates(options);
     }
     setDrag(null);
   };
@@ -372,6 +532,8 @@ export function Board(props: BoardProps) {
         style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}
         role="group"
         aria-label={label}
+        onPointerDownCapture={skipAnimation}
+        onKeyDownCapture={skipAnimation}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => setDrag(null)}
@@ -383,7 +545,11 @@ export function Board(props: BoardProps) {
             <div
               key={g.id}
               className={`${styles.cell} ${styles.ghost}`}
-              style={{ ...pieceStyle(g.sq), animationDelay: `${g.delay}ms` }}
+              style={{
+                ...pieceStyle(g.sq),
+                animationDelay: `${g.delay}ms`,
+                animationDuration: `${g.duration}ms`,
+              }}
             >
               <Piece value={g.piece} />
             </div>
@@ -425,14 +591,19 @@ export function Board(props: BoardProps) {
           </svg>
         )}
 
+        {/* Cor em contraste com a casa sob o rótulo: o canto inferior esquerdo é sempre escuro. */}
         <div className={styles.files} aria-hidden="true">
-          {files.map((f) => (
-            <span key={f}>{f}</span>
+          {files.map((f, x) => (
+            <span key={f} className={x % 2 === 0 ? styles.onDark : styles.onLight}>
+              {f}
+            </span>
           ))}
         </div>
         <div className={styles.ranks} aria-hidden="true">
-          {ranks.map((r) => (
-            <span key={r}>{r}</span>
+          {ranks.map((r, y) => (
+            <span key={r} className={(y + size - 1) % 2 === 0 ? styles.onDark : styles.onLight}>
+              {r}
+            </span>
           ))}
         </div>
       </div>

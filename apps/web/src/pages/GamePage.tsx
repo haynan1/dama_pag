@@ -6,6 +6,8 @@ import {
   ArrowsDownUp,
   CircleNotch,
   Copy,
+  CornersIn,
+  CornersOut,
   Flag,
   Handshake,
   WifiSlash,
@@ -22,6 +24,7 @@ import { useToast } from '../components/Toasts.tsx';
 import { Badge, Button, Card, Segmented, Skeleton } from '../components/ui.tsx';
 import { copyText } from '../lib/clipboard.ts';
 import { REASON_LABEL, SIDE_LABEL } from '../lib/format.ts';
+import { useFullscreen } from '../lib/fullscreen.ts';
 import { useMeta } from '../lib/queries.ts';
 import { useGame } from '../lib/useGame.ts';
 import s from './GamePage.module.css';
@@ -39,6 +42,21 @@ export function GamePage({ id }: { id: string }) {
   const [preview, setPreview] = useState<BoardArrow[] | null>(null);
   const [confirmResign, setConfirmResign] = useState(false);
   const [dialogClosed, setDialogClosed] = useState(false);
+  const fullscreen = useFullscreen({ restore: true });
+
+  // Atalho "F" alterna a tela cheia (fora de campos de texto).
+  useEffect(() => {
+    if (!fullscreen.supported) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'f' && e.key !== 'F') return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      fullscreen.toggle();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen.supported, fullscreen.toggle]);
 
   // Nova posição: zera dica e prévia.
   const ply = game?.moves.length ?? 0;
@@ -135,9 +153,22 @@ export function GamePage({ id }: { id: string }) {
               <WifiSlash aria-hidden="true" /> reconectando
             </Badge>
           )}
+          {fullscreen.supported && (
+            <button
+              type="button"
+              className={s.iconButton}
+              onClick={fullscreen.toggle}
+              aria-pressed={fullscreen.active}
+              aria-label="Tela cheia"
+              aria-keyshortcuts="F"
+              title={fullscreen.active ? 'Sair da tela cheia (F)' : 'Tela cheia (F)'}
+            >
+              {fullscreen.active ? <CornersIn aria-hidden="true" /> : <CornersOut aria-hidden="true" />}
+            </button>
+          )}
         </div>
 
-        {player(top)}
+        <div className={s.playerTop}>{player(top)}</div>
         <div className={s.boardRow}>
           {showEval && <EvalBar evalWhite={lastEval} orientation={orientation} />}
           <div className={`${s.boardWrap} ${game.paused ? s.pausedBoard : ''}`}>
@@ -148,6 +179,7 @@ export function GamePage({ id }: { id: string }) {
               movable={yourTurn ? you : null}
               onMove={(key) => live.move(key)}
               lastMove={display.lastMove}
+              pace={display.lastMoveByOpponent ? 'opponent' : 'own'}
               arrows={arrows}
               highlight={highlight}
               label={`Tabuleiro ${VARIANTS[game.variant].short}. ${statusText}.`}
@@ -189,7 +221,7 @@ export function GamePage({ id }: { id: string }) {
             )}
           </div>
         </div>
-        {player(bottom)}
+        <div className={s.playerBottom}>{player(bottom)}</div>
 
         <div className={s.controls} role="toolbar" aria-label="Ações da partida">
           <Button variant="ghost" onClick={() => setFlipped((f) => !f)} aria-label="Virar tabuleiro">

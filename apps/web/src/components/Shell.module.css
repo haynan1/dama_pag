@@ -158,13 +158,27 @@
     flex: 1;
     align-content: start;
   }
+
+  /* Partida em tela cheia: só o jogo, sem trilho. */
+  .shell[data-fullscreen] {
+    grid-template-columns: 1fr;
+  }
+
+  .shell[data-fullscreen] .rail {
+    display: none;
+  }
+
+  .shell[data-fullscreen] .main {
+    padding: var(--s-5) clamp(var(--s-4), 3vw, var(--s-10));
+  }
 }
 
 /* Mobile: barra inferior */
 @media (max-width: 899px) {
   .main {
     padding-bottom: calc(var(--bottom-nav-height) + var(--s-10) + env(safe-area-inset-bottom));
-    padding-top: var(--s-6);
+    /* App na Tela de Início usa a barra de status translúcida: o conteúdo começa abaixo dela. */
+    padding-top: calc(var(--s-6) + env(safe-area-inset-top));
   }
 
   .rail {
@@ -212,6 +226,23 @@
   }
 
   .immersive .main {
-    padding: var(--s-3) var(--s-3) calc(var(--s-6) + env(safe-area-inset-bottom));
+    padding: calc(var(--s-3) + env(safe-area-inset-top)) calc(var(--s-3) + env(safe-area-inset-right))
+      calc(var(--s-6) + env(safe-area-inset-bottom)) calc(var(--s-3) + env(safe-area-inset-left));
+  }
+}
+
+/* Celular deitado na partida: a tela inteira é do tabuleiro, em qualquer largura. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .shell.immersive {
+    grid-template-columns: 1fr;
+  }
+
+  .immersive .rail {
+    display: none;
+  }
+
+  .immersive .main {
+    padding: calc(var(--s-3) + env(safe-area-inset-top)) calc(var(--s-4) + env(safe-area-inset-right))
+      calc(var(--s-3) + env(safe-area-inset-bottom)) calc(var(--s-4) + env(safe-area-inset-left));
   }
 }

@@ -14,18 +14,74 @@
 }
 
 .boardCol {
+  /* Altura consumida por tudo que não é tabuleiro: topo (44) + 2 jogadores (2×60) + controles (60) + respiros. */
+  --chrome: 290px;
   display: grid;
   gap: var(--s-2);
   width: 100%;
   /* O tabuleiro nunca passa da altura útil da tela. */
-  /* topo (44) + 2 jogadores (2×60) + controles (60) + respiros ≈ 290px */
-  max-width: min(100%, calc(100dvh - 290px));
+  max-width: min(100%, calc(100dvh - var(--chrome)));
   margin: 0 auto;
+}
+
+/* Tela cheia no desktop: sem trilho e com respiros menores, o tabuleiro cresce. */
+:global([data-fullscreen]) .boardCol {
+  --chrome: 250px;
 }
 
 @media (max-width: 899px) {
   .boardCol {
-    max-width: 100%;
+    --chrome: 250px;
+  }
+}
+
+/*
+ * Celular deitado: tabuleiro ocupa toda a altura à esquerda; status, jogadores e ações
+ * empilham ao lado. Nada de rolar para enxergar a partida.
+ */
+@media (orientation: landscape) and (max-height: 560px) {
+  .layout {
+    gap: var(--s-4);
+  }
+
+  .boardCol {
+    max-width: none;
+    grid-template-columns: auto minmax(200px, 1fr);
+    grid-template-areas:
+      "board top"
+      "board p1"
+      "board p2"
+      "board ctl";
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: var(--s-4);
+    align-items: start;
+  }
+
+  .topBar {
+    grid-area: top;
+  }
+
+  .playerTop {
+    grid-area: p1;
+  }
+
+  .playerBottom {
+    grid-area: p2;
+  }
+
+  .controls {
+    grid-area: ctl;
+    justify-content: flex-start;
+  }
+
+  .boardRow {
+    grid-area: board;
+  }
+
+  .boardWrap {
+    flex: none;
+    /* Altura útil menos respiros do main (≈ 36) e do anel do tabuleiro (24). */
+    width: calc(100dvh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 }
 
@@ -37,7 +93,8 @@
   flex-wrap: wrap;
 }
 
-.back {
+.back,
+.iconButton {
   display: grid;
   place-items: center;
   width: 44px;
@@ -46,12 +103,21 @@
   color: var(--text-2);
 }
 
-.back:hover {
+.iconButton {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.back:hover,
+.iconButton:hover {
   background: var(--surface-2);
   color: var(--text);
 }
 
-.back svg {
+.back svg,
+.iconButton svg {
   width: 20px;
   height: 20px;
 }

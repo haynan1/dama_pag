@@ -266,34 +266,43 @@
   pointer-events: none;
   display: flex;
   font-family: var(--font-mono);
-  font-size: clamp(8px, 1.9cqi, 11px);
-  font-weight: 600;
-  color: rgb(255 255 255 / 0.55);
+  font-size: clamp(11px, 3cqi, 16px);
+  font-weight: 700;
+  line-height: 1;
   z-index: 3;
+}
+
+.onDark {
+  color: rgb(236 222 196 / 0.9);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.45);
+}
+
+.onLight {
+  color: rgb(72 50 36 / 0.92);
 }
 
 .files {
   left: 0;
   right: 0;
-  bottom: 1px;
+  bottom: 0.6cqi;
 }
 
 .files span {
   flex: 1;
   text-align: right;
-  padding-right: 0.5cqi;
+  padding-right: 0.8cqi;
 }
 
 .ranks {
   top: 0;
   bottom: 0;
-  left: 2px;
+  left: 0.7cqi;
   flex-direction: column;
 }
 
 .ranks span {
   flex: 1;
-  padding-top: 0.3cqi;
+  padding-top: 0.7cqi;
 }
 
 .disambiguate {

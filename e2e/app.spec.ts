@@ -111,6 +111,39 @@ test('contra a IA com mentor: lance, revisão, dica, árvore, estudo, desfazer, 
   await expectAccessible(page);
 });
 
+test('tela cheia: alterna pelo botão e pelo atalho, tabuleiro inteiro na tela', async ({ page }, info) => {
+  await page.goto('/');
+  await page.getByLabel('Força da IA').fill('1');
+  await page.getByRole('button', { name: /Jogar contra a IA/ }).click();
+  await expect(yourTurn(page)).toBeVisible();
+
+  const toggle = page.getByRole('button', { name: 'Tela cheia' });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true);
+  if (info.project.name === 'desktop') await expect(page.getByRole('navigation')).toBeHidden();
+  await shot(page, 'fullscreen');
+
+  const board = await page.getByRole('group', { name: /Tabuleiro/ }).boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(board!.y + board!.height).toBeLessThanOrEqual(viewport.height);
+
+  await page.keyboard.press('f');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
+  await expectAccessible(page);
+
+  if (info.project.name === 'mobile') {
+    // Celular deitado: tabuleiro inteiro à vista, sem rolar.
+    await page.setViewportSize({ width: viewport.height, height: viewport.width });
+    const landscape = await page.getByRole('group', { name: /Tabuleiro/ }).boundingBox();
+    expect(landscape!.y).toBeGreaterThanOrEqual(0);
+    expect(landscape!.y + landscape!.height).toBeLessThanOrEqual(viewport.width);
+    await expectNoHorizontalScroll(page);
+    await shot(page, 'landscape');
+  }
+});
+
 test('análise livre: melhores lances e lances dos dois lados', async ({ page }) => {
   await page.goto('/analise');
   await page.getByRole('button', { name: /Melhores lances/ }).click();

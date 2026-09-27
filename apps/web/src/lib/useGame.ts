@@ -20,6 +20,8 @@ export interface LiveGame {
   readonly display: {
     fen: string;
     lastMove: { path: readonly number[]; captures: readonly number[] } | null;
+    /** O último lance foi de outra pessoa (IA ou adversário): ganha um respiro antes de ser encenado. */
+    lastMoveByOpponent: boolean;
   } | null;
   move(key: string): void;
   send(message: DistributiveOmit<ClientMessage, 'gameId'>): void;
@@ -131,8 +133,16 @@ export function useGame(id: string): LiveGame {
   const last = game?.moves.at(-1);
   const display = game
     ? optimistic
-      ? { fen: optimistic.fen, lastMove: { path: optimistic.path, captures: optimistic.captures } }
-      : { fen: game.fen, lastMove: last ? { path: last.path, captures: last.captures } : null }
+      ? {
+          fen: optimistic.fen,
+          lastMove: { path: optimistic.path, captures: optimistic.captures },
+          lastMoveByOpponent: false,
+        }
+      : {
+          fen: game.fen,
+          lastMove: last ? { path: last.path, captures: last.captures } : null,
+          lastMoveByOpponent: last !== undefined && last.side !== game.you,
+        }
     : null;
 
   return {

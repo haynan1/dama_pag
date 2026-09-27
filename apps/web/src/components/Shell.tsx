@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
+import { useFullscreenState } from '../lib/fullscreen.ts';
 import { useMe } from '../lib/queries.ts';
 import s from './Shell.module.css';
 
@@ -45,6 +46,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const profile = me.data?.profile;
   const mainRef = useRef<HTMLElement>(null);
   const immersive = location.startsWith('/partida');
+  const fullscreen = useFullscreenState();
 
   // Foco no conteúdo principal ao trocar de página (leitores de tela).
   const first = useRef(true);
@@ -59,7 +61,10 @@ export function Shell({ children }: { children: ReactNode }) {
   }, [location]);
 
   return (
-    <div className={`${s.shell} ${immersive ? s.immersive : ''}`}>
+    <div
+      className={`${s.shell} ${immersive ? s.immersive : ''}`}
+      data-fullscreen={immersive && fullscreen ? '' : undefined}
+    >
       <a className="skip-link" href="#conteudo">
         Pular para o conteúdo
       </a>
