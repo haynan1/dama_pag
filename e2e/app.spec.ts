@@ -40,7 +40,7 @@ async function playFirstMove(page: Page) {
 }
 
 // Nenhuma violação de CSP (ex.: fonte embutida como data:) nem erro de JavaScript em nenhum teste.
-test.beforeEach(({ page }, info) => {
+test.beforeEach(({ page }) => {
   const problems: string[] = [];
   page.on('console', (m) => {
     if (m.type() === 'error' && /Content Security Policy/i.test(m.text()))
