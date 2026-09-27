@@ -20,6 +20,7 @@ rodando no PC, modo mentor, casos de estudo com repetição espaçada, históric
 │  ai/       pool de worker_threads ──► @dama/engine (busca síncrona, isolada do event loop)      │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 packages/engine    regras, gerador de lances, busca alfa-beta, avaliação, mentor (zero dependências)
+packages/campaign  campanha: fases, juiz de lances, vidas, estrelas, progresso (lógica pura)
 packages/protocol  contrato cliente/servidor: tipos (entrada principal) + schemas zod (`/schemas`)
 ```
 
@@ -69,6 +70,12 @@ packages/protocol  contrato cliente/servidor: tipos (entrada principal) + schema
   sem mentor, só no fim (na rede, o adversário nunca vê análise durante a partida).
 - **Modo estudo** (contra a IA): pausa o relógio e a IA; desfazer volta até o seu último lance.
   Qualquer ajuda marca a partida como assistida: metade do XP e sem efeito no rating.
+
+## Campanha e app Android
+
+A campanha roda inteira no aparelho — o motor num Web Worker, o progresso no armazenamento local —
+e é o mesmo código no app da rede local (`/campanha`) e no app Android (build `VITE_TARGET=app`,
+empacotado com Capacitor). Detalhes, monetização e publicação em [ANDROID.md](ANDROID.md).
 
 ## Progressão
 

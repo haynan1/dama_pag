@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Obsidiana e latão: as mesmas cores da interface, para não haver clarão ao abrir o app. -->
+    <color name="colorPrimary">#0A0A0B</color>
+    <color name="colorPrimaryDark">#0A0A0B</color>
+    <color name="colorAccent">#D6A955</color>
+    <color name="windowBackground">#0A0A0B</color>
+</resources>

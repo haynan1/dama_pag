@@ -203,6 +203,10 @@
     height: var(--bottom-nav-height);
   }
 
+  .desktopOnly {
+    display: none;
+  }
+
   .item {
     flex-direction: column;
     justify-content: center;

@@ -150,3 +150,16 @@ button:disabled {
     scroll-behavior: auto !important;
   }
 }
+
+/* Campanha: abertura e raiz do app Android (tela única, sem trilho de navegação). */
+.campaign-root {
+  min-height: 100dvh;
+}
+
+.campaign-splash {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  font-size: 44px;
+  color: var(--text-3);
+}

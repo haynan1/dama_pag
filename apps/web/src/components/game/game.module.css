@@ -562,7 +562,24 @@ button.moveCell:hover {
   position: absolute;
   inset: 0;
   transform-origin: bottom;
+  transform: scaleY(var(--share, 0.5));
   transition: transform 700ms var(--ease-out);
+}
+
+/* Celular em pé: faixa horizontal abaixo do tabuleiro, seu lado à esquerda. */
+@media (max-width: 899px) and (orientation: portrait) {
+  .evalBar {
+    order: 2;
+    width: auto;
+    height: 8px;
+    align-self: stretch;
+    border-radius: 4px;
+  }
+
+  .evalFill {
+    transform-origin: left;
+    transform: scaleX(var(--share, 0.5));
+  }
 }
 
 .evalWhite {

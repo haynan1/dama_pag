@@ -154,7 +154,17 @@
 .boardRow {
   display: flex;
   gap: var(--s-3);
-  padding: 12px 12px 12px 12px;
+  padding: 12px;
+}
+
+/* Celular em pé: a avaliação desce para baixo do tabuleiro — ele ganha a largura inteira. */
+@media (max-width: 899px) and (orientation: portrait) {
+  .boardRow {
+    flex-direction: column;
+    gap: 20px;
+    /* Avança sobre o respiro lateral da página: cada pixel vai para as casas. */
+    margin: 0 calc(-1 * var(--s-2));
+  }
 }
 
 .boardWrap {

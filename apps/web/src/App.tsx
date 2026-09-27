@@ -16,6 +16,9 @@ const Studies = lazy(() => import('./pages/Studies.tsx'));
 const StudyTrainer = lazy(() => import('./pages/StudyTrainer.tsx'));
 const Progress = lazy(() => import('./pages/Progress.tsx'));
 const Analysis = lazy(() => import('./pages/Analysis.tsx'));
+const CampaignRoutes = lazy(() =>
+  import('./campaign/CampaignRoutes.tsx').then((m) => ({ default: m.CampaignRoutes })),
+);
 
 function PageFallback() {
   return (
@@ -84,6 +87,9 @@ export function App() {
           <Route path="/estudos/treino" component={StudyTrainer} />
           <Route path="/analise" component={Analysis} />
           <Route path="/progresso" component={Progress} />
+          <Route path="/campanha" nest>
+            <CampaignRoutes />
+          </Route>
           <Route component={NotFound} />
         </Switch>
       </Suspense>

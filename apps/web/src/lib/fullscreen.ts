@@ -20,6 +20,8 @@ type Doc = Document & {
 type El = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
 
 const PREF_KEY = 'dama:fullscreen';
+/** Saída feita pelo app (ao deixar a partida): não é escolha da pessoa, não muda a preferência. */
+let leavingScreen = false;
 const EVENTS = ['fullscreenchange', 'webkitfullscreenchange'] as const;
 
 function doc(): Doc | null {
@@ -113,7 +115,8 @@ export function useFullscreen({ restore = false }: { restore?: boolean } = {}): 
   useEffect(
     () =>
       subscribe(() => {
-        if (!isActive()) writePref(false);
+        if (!isActive() && !leavingScreen) writePref(false);
+        leavingScreen = false;
       }),
     [],
   );
@@ -121,12 +124,26 @@ export function useFullscreen({ restore = false }: { restore?: boolean } = {}): 
   useEffect(() => {
     if (!restore || !supported || isActive() || !readPref()) return;
     // `click`, não `pointerdown`: o redimensionamento acontece depois do toque já ter sido tratado.
-    const onClick = () => {
+    // Toque em link (voltar, revisão) sai da partida: entrar em tela cheia ali só atrapalharia.
+    const onClick = (e: MouseEvent) => {
+      if (e.target instanceof Element && e.target.closest('a[href]')) return;
       if (!isActive() && readPref()) void enter();
     };
     document.addEventListener('click', onClick, { once: true, capture: true });
     return () => document.removeEventListener('click', onClick, { capture: true });
   }, [restore, supported]);
+
+  // A tela cheia é da partida: ao sair dela (voltar, trocar de página), o resto do app volta ao normal.
+  useEffect(() => {
+    if (!restore) return;
+    return () => {
+      if (!isActive()) return;
+      leavingScreen = true;
+      void exit().finally(() => {
+        leavingScreen = false;
+      });
+    };
+  }, [restore]);
 
   const toggle = useCallback(() => {
     if (isActive()) {

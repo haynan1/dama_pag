@@ -54,6 +54,27 @@ describe('Tela cheia', () => {
     expect(document.documentElement.requestFullscreen).toHaveBeenCalledTimes(1);
   });
 
+  it('toque num link (voltar) não liga a tela cheia', async () => {
+    localStorage.setItem('dama:fullscreen', '1');
+    renderHook(() => useFullscreen({ restore: true }));
+    const link = document.createElement('a');
+    link.href = '#voltar';
+    document.body.append(link);
+    await act(async () => link.click());
+    expect(document.documentElement.requestFullscreen).not.toHaveBeenCalled();
+    link.remove();
+  });
+
+  it('sair da partida sai da tela cheia sem mudar a preferência', async () => {
+    const { result, unmount } = renderHook(() => useFullscreen({ restore: true }));
+    await act(async () => result.current.toggle());
+    expect(localStorage.getItem('dama:fullscreen')).toBe('1');
+    await act(async () => unmount());
+    expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+    expect(current).toBeNull();
+    expect(localStorage.getItem('dama:fullscreen')).toBe('1');
+  });
+
   it('não restaura quando a pessoa saiu da tela cheia', async () => {
     localStorage.setItem('dama:fullscreen', '0');
     renderHook(() => useFullscreen({ restore: true }));

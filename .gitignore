@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-app/
 coverage/
 data/
 *.db
@@ -7,6 +8,9 @@ data/
 .env
 .env.*
 !.env.example
+# Configuração não secreta do build Android (IDs de produção vão em .env.app.local).
+!apps/web/.env.app
+!apps/web/.env.app.example
 *.log
 .DS_Store
 .vscode/*

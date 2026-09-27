@@ -25,3 +25,5 @@ Dockerfile
 apps/server/dev.env
 test-results
 playwright-report
+apps/web/android
+apps/web/dist-app

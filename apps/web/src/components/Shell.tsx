@@ -4,6 +4,7 @@ import {
   ClockCounterClockwise,
   Crown,
   MagnifyingGlass,
+  Path,
 } from '@phosphor-icons/react';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
@@ -12,6 +13,12 @@ import { useMe } from '../lib/queries.ts';
 import s from './Shell.module.css';
 
 const NAV = [
+  {
+    href: '/campanha',
+    label: 'Campanha',
+    icon: Path,
+    match: (p: string) => p.startsWith('/campanha'),
+  },
   {
     href: '/',
     label: 'Jogar',
@@ -24,6 +31,8 @@ const NAV = [
     label: 'Análise',
     icon: MagnifyingGlass,
     match: (p: string) => p.startsWith('/analise'),
+    // Barra inferior do celular comporta 5 destinos; a análise livre fica no trilho do desktop.
+    desktopOnly: true,
   },
   {
     href: '/historico',
@@ -45,7 +54,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const due = me.data?.studiesDue ?? 0;
   const profile = me.data?.profile;
   const mainRef = useRef<HTMLElement>(null);
-  const immersive = location.startsWith('/partida');
+  const immersive = location.startsWith('/partida') || location.startsWith('/campanha/fase');
   const fullscreen = useFullscreenState();
 
   // Foco no conteúdo principal ao trocar de página (leitores de tela).
@@ -78,7 +87,7 @@ export function Shell({ children }: { children: ReactNode }) {
             const active = item.match(location);
             const Icon = item.icon;
             return (
-              <li key={item.href}>
+              <li key={item.href} className={'desktopOnly' in item ? s.desktopOnly : undefined}>
                 <Link href={item.href} className={s.item} aria-current={active ? 'page' : undefined}>
                   <Icon weight={active ? 'fill' : 'regular'} aria-hidden="true" />
                   <span>{item.label}</span>
