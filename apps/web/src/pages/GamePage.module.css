@@ -1,0 +1,238 @@
+.layout {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+}
+
+.boardCol {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+  /* O tabuleiro nunca passa da altura útil da tela. */
+  /* topo (44) + 2 jogadores (2×60) + controles (60) + respiros ≈ 290px */
+  max-width: min(100%, calc(100dvh - 290px));
+  margin: 0 auto;
+}
+
+@media (max-width: 899px) {
+  .boardCol {
+    max-width: 100%;
+  }
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  flex-wrap: wrap;
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+}
+
+.back:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-weight: 600;
+  min-width: 0;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+  flex: none;
+}
+
+.statusYou {
+  background: var(--brass-strong);
+  box-shadow: 0 0 0 4px var(--brass-soft);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+.boardRow {
+  display: flex;
+  gap: var(--s-3);
+  padding: 12px 12px 12px 12px;
+}
+
+.boardWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  transition: filter var(--t-slow);
+}
+
+.pausedBoard > :first-child {
+  filter: saturate(0.6) brightness(0.9);
+}
+
+.waiting {
+  position: absolute;
+  inset: -12px;
+  z-index: 10;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--s-4);
+  padding: var(--s-6);
+  text-align: center;
+  border-radius: 10px;
+  background: rgb(10 10 11 / 0.84);
+  backdrop-filter: blur(10px);
+  animation: fade var(--t-slow) var(--ease-out);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.roomCode {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 9vw, 4rem);
+  letter-spacing: 0.22em;
+  color: var(--brass-strong);
+  line-height: 1;
+  padding-left: 0.22em;
+}
+
+.inviteList {
+  display: grid;
+  gap: var(--s-2);
+  width: min(420px, 100%);
+}
+
+.invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--brass-line);
+  background: var(--brass-soft);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.invite svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--brass-strong);
+}
+
+.waitingNote {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--text-2);
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-1);
+  padding-top: var(--s-2);
+}
+
+@media (max-width: 599px) {
+  .controlLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+.panel {
+  overflow: hidden;
+}
+
+@media (min-width: 1100px) {
+  .panel {
+    position: sticky;
+    top: var(--s-6);
+    max-height: calc(100dvh - var(--s-12));
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--s-4) var(--s-4) var(--s-2);
+  background: var(--surface);
+}
+
+.finishedBar {
+  padding: var(--s-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+.finishedBar a {
+  color: var(--brass-strong);
+  text-decoration: none;
+}
+
+.finishedBar a:hover {
+  text-decoration: underline;
+}

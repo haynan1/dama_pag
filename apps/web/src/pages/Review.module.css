@@ -1,0 +1,82 @@
+.layout {
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+}
+
+.boardCol {
+  display: grid;
+  gap: var(--s-4);
+  width: 100%;
+  max-width: min(100%, calc(100dvh - 180px));
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+}
+
+.counter {
+  min-width: 72px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.side {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.explain {
+  display: grid;
+  gap: var(--s-2);
+  min-height: 120px;
+}
+
+.explainHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.moveName {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.headline {
+  font-weight: 600;
+}
+
+.details {
+  margin: 0;
+  padding-left: var(--s-5);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  display: grid;
+  gap: var(--s-1);
+}
+
+.best {
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--good-soft);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.best strong {
+  color: var(--good);
+}

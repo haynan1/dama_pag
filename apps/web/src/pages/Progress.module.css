@@ -1,0 +1,139 @@
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.nameForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 520px;
+}
+
+.nameForm input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.stats {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+}
+
+.stat {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  box-shadow: none;
+}
+
+.statSub {
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  margin-left: var(--s-2);
+}
+
+.chart {
+  margin: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.chart svg {
+  width: 100%;
+  height: 180px;
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--brass-strong);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartCaption {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.achievements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+.achievement {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: var(--s-4);
+  align-items: center;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  border-style: dashed;
+  background: var(--bg-raised);
+}
+
+.unlocked {
+  border-style: solid;
+  border-color: var(--line-strong);
+  background: linear-gradient(135deg, rgb(214 169 85 / 0.06), transparent 60%), var(--surface);
+}
+
+.medal {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-3);
+}
+
+.medal svg {
+  width: 28px;
+  height: 28px;
+}
+
+.unlocked .tier_bronze {
+  color: #d9996a;
+  background: rgb(201 138 90 / 0.14);
+}
+.unlocked .tier_silver {
+  color: #d5dae2;
+  background: rgb(201 206 214 / 0.12);
+}
+.unlocked .tier_gold {
+  color: var(--brass-strong);
+  background: var(--brass-soft);
+}
+.unlocked .tier_platinum {
+  color: var(--brilliant);
+  background: var(--brilliant-soft);
+}
+
+.achText {
+  display: grid;
+  gap: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.achText strong {
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+
+.achMeta {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}

@@ -1,0 +1,39 @@
+{
+  "name": "dama",
+  "private": true,
+  "type": "module",
+  "description": "Damas brasileiras em rede local com motor de IA próprio e modo mentor.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.ts",
+    "dev:server": "npm run dev -w @dama/server",
+    "dev:web": "npm run dev -w @dama/web",
+    "build": "npm run build -w @dama/web",
+    "start": "npm run start -w @dama/server",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "hooks": "git config core.hooksPath .githooks",
+    "bench": "node packages/engine/bench/bench.ts",
+    "e2e": "playwright test",
+    "coverage": "vitest run --coverage --coverage.include='packages/*/src/**' --coverage.include='apps/*/src/**'"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@biomejs/biome": "2.5.14",
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.3",
+    "@vitest/coverage-v8": "5.0.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2"
+  }
+}

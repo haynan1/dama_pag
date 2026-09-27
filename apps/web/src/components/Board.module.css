@@ -1,0 +1,304 @@
+.frame {
+  width: 100%;
+  container-type: inline-size;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.05),
+    0 0 0 10px var(--board-frame),
+    0 0 0 11px rgb(255 255 255 / 0.06),
+    0 40px 90px -30px rgb(0 0 0 / 0.9),
+    0 12px 30px -10px rgb(0 0 0 / 0.6);
+}
+
+.light {
+  background: var(--sq-light);
+  /* Fibra da madeira: listras suaves em ângulo, sem imagem. */
+  background-image: repeating-linear-gradient(102deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 7px);
+}
+
+.dark {
+  position: relative;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(135deg, var(--sq-dark), var(--sq-dark-2));
+  background-image:
+    repeating-linear-gradient(98deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 6px),
+    linear-gradient(135deg, var(--sq-dark), var(--sq-dark-2));
+  cursor: default;
+  border-radius: 0;
+}
+
+.dark:focus-visible {
+  outline: 3px solid var(--brass-strong);
+  outline-offset: -3px;
+  z-index: 3;
+}
+
+.last::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(236 192 108 / 0.22);
+}
+
+.selected::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(236 192 108 / 0.34);
+}
+
+.target {
+  cursor: pointer;
+}
+
+.targetEmpty::before {
+  content: "";
+  position: absolute;
+  inset: 36%;
+  border-radius: 50%;
+  background: rgb(236 192 108 / 0.72);
+  box-shadow: 0 0 0 4px rgb(236 192 108 / 0.18);
+  animation: pop var(--t-med) var(--ease-spring);
+}
+
+.target:not(.targetEmpty)::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px rgb(234 115 93 / 0.9);
+  z-index: 2;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+.pieces {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cell {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 2;
+  will-change: transform;
+}
+
+.grab {
+  cursor: grab;
+}
+
+.dragging .grab {
+  cursor: grabbing;
+}
+
+.lifted {
+  z-index: 5;
+  transition: none;
+}
+
+.lifted .piece {
+  box-shadow:
+    0 18px 26px -8px rgb(0 0 0 / 0.75),
+    0 0 0 2px var(--brass-strong);
+}
+
+.mustCapture .piece {
+  animation: mustCapture 1.6s ease-in-out infinite;
+}
+
+@keyframes mustCapture {
+  50% {
+    box-shadow:
+      0 6px 10px -4px rgb(0 0 0 / 0.7),
+      0 0 0 3px rgb(236 192 108 / 0.85);
+  }
+}
+
+.hinted .piece {
+  box-shadow:
+    0 6px 10px -4px rgb(0 0 0 / 0.7),
+    0 0 0 3px var(--brilliant),
+    0 0 24px 4px rgb(92 188 236 / 0.45);
+}
+
+.ghost {
+  z-index: 1;
+  animation: vanish 260ms var(--ease-in) forwards;
+}
+
+@keyframes vanish {
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+.piece {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 6px 10px -4px rgb(0 0 0 / 0.7),
+    0 2px 0 rgb(0 0 0 / 0.35);
+  transition: box-shadow var(--t-med) var(--ease-out);
+}
+
+.ivory {
+  background: radial-gradient(circle at 35% 30%, var(--piece-ivory-1), var(--piece-ivory-2) 72%);
+}
+
+.ebony {
+  background: radial-gradient(circle at 35% 30%, var(--piece-ebony-1), var(--piece-ebony-2) 72%);
+}
+
+.inner {
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.ivory .inner {
+  box-shadow:
+    inset 0 0 0 1.5px rgb(120 96 60 / 0.35),
+    inset 0 2px 3px rgb(0 0 0 / 0.1);
+}
+
+.ebony .inner {
+  box-shadow:
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.09),
+    inset 0 2px 3px rgb(0 0 0 / 0.5);
+}
+
+.crown {
+  width: 58%;
+  height: 58%;
+  color: #b8872f;
+  filter: drop-shadow(0 1px 0 rgb(255 255 255 / 0.4));
+}
+
+.ebony .crown {
+  color: var(--brass);
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
+}
+
+.arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.arrow {
+  fill: none;
+  stroke-width: 0.13;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.88;
+}
+
+.faint {
+  opacity: 0.4;
+  stroke-dasharray: 0.2 0.14;
+}
+
+.stroke_brass {
+  stroke: var(--brass-strong);
+}
+.stroke_steel {
+  stroke: var(--steel);
+}
+.stroke_hint {
+  stroke: var(--brilliant);
+}
+.stroke_good {
+  stroke: var(--good);
+}
+.stroke_bad {
+  stroke: var(--bad);
+}
+.fill_brass {
+  fill: var(--brass-strong);
+}
+.fill_steel {
+  fill: var(--steel);
+}
+.fill_hint {
+  fill: var(--brilliant);
+}
+.fill_good {
+  fill: var(--good);
+}
+.fill_bad {
+  fill: var(--bad);
+}
+
+.files,
+.ranks {
+  position: absolute;
+  pointer-events: none;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: clamp(8px, 1.9cqi, 11px);
+  font-weight: 600;
+  color: rgb(255 255 255 / 0.55);
+  z-index: 3;
+}
+
+.files {
+  left: 0;
+  right: 0;
+  bottom: 1px;
+}
+
+.files span {
+  flex: 1;
+  text-align: right;
+  padding-right: 0.5cqi;
+}
+
+.ranks {
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  flex-direction: column;
+}
+
+.ranks span {
+  flex: 1;
+  padding-top: 0.3cqi;
+}
+
+.disambiguate {
+  margin-top: var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--brass-strong);
+  text-align: center;
+}

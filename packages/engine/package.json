@@ -1,0 +1,14 @@
+{
+  "name": "@dama/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Regras de damas (brasileira, internacional, canadense), motor de busca e análise do mentor. Zero dependências.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "bench": "node bench/bench.ts"
+  }
+}

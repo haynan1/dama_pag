@@ -1,0 +1,33 @@
+name: dama
+
+services:
+  dama:
+    build: .
+    image: dama:latest
+    restart: unless-stopped
+    # Publicado em todas as interfaces para outros dispositivos da rede local entrarem.
+    ports:
+      - "${PORT:-5810}:5810"
+    environment:
+      AI_WORKERS: ${AI_WORKERS:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      EXTRA_ORIGINS: ${EXTRA_ORIGINS:-}
+    volumes:
+      - dama-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5810/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  # Dados são sagrados: volume nomeado sobrevive a rebuilds e `docker compose down`.
+  dama-data:

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Lint + tipos antes de cada commit. Testes completos rodam com `npm run check`.
+npx biome check --staged --no-errors-on-unmatched || exit 1
+npm run typecheck --silent || exit 1

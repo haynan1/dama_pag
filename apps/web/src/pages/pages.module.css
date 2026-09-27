@@ -1,0 +1,157 @@
+.page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--s-8);
+  animation: rise var(--t-slow) var(--ease-out);
+}
+
+.page > * {
+  min-width: 0;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-3xl);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.title em {
+  color: var(--brass-strong);
+}
+
+.lede {
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  max-width: 60ch;
+}
+
+.sectionTitle {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  margin-bottom: var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sectionTitle svg {
+  width: 20px;
+  height: 20px;
+  color: var(--brass-strong);
+}
+
+.cardBody {
+  padding: var(--s-6);
+  display: grid;
+  gap: var(--s-5);
+}
+
+.cardBody > * {
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.grow {
+  flex: 1;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-height: 64px;
+  padding: var(--s-3) var(--s-6);
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--t-fast);
+}
+
+.listItem:first-child {
+  border-top: 0;
+}
+
+a.listItem:hover,
+button.listItem:hover {
+  background: var(--surface-2);
+}
+
+button.listItem {
+  width: 100%;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.listMain {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.listMain strong {
+  font-weight: 580;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listMeta {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}

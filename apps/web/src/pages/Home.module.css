@@ -1,0 +1,164 @@
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-6);
+  padding-top: var(--s-4);
+}
+
+.greeting {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-4xl);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-top: var(--s-2);
+}
+
+.dot {
+  color: var(--brass-strong);
+}
+
+.grid {
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.grid > *,
+.side > * {
+  min-width: 0;
+}
+
+@media (min-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+}
+
+.newGame {
+  overflow: hidden;
+}
+
+.newGame::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 180px;
+  background: radial-gradient(600px 180px at 20% 0%, rgb(214 169 85 / 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-2xl);
+  line-height: 1;
+}
+
+.levelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.levelName {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.levelName strong {
+  color: var(--brass-strong);
+  font-weight: 600;
+}
+
+.twoCol {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.mentorLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.mentorLabel svg {
+  width: 20px;
+  height: 20px;
+  color: var(--brilliant);
+}
+
+.side {
+  display: grid;
+  gap: var(--s-6);
+}
+
+.sideTitle {
+  padding: var(--s-5) var(--s-6) var(--s-3);
+  margin: 0;
+}
+
+.bigNumber {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  color: var(--brass-strong);
+  line-height: 1;
+}
+
+.joinForm {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.codeInput {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: var(--fs-lg);
+}
+
+.lan {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.lanUrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--brass-line);
+  background: var(--brass-soft);
+  color: var(--brass-strong);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.lanUrl svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.quickStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}

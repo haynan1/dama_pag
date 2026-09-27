@@ -1,0 +1,113 @@
+/*
+ * Dama — design tokens.
+ * Direção: sala de estudo noturna. Obsidiana quente, latão como único acento, madeira no tabuleiro.
+ * Tipografia editorial (Instrument Serif) sobre uma UI precisa (Inter) e notação em mono.
+ */
+:root {
+  /* Superfícies */
+  --bg: #0a0a0b;
+  --bg-raised: #0f0f11;
+  --surface: #141417;
+  --surface-2: #1a1a1e;
+  --surface-3: #222228;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.13);
+  --scrim: rgb(5 5 6 / 0.72);
+
+  /* Texto (contraste AA sobre --bg e --surface) */
+  --text: #eeeae3;
+  --text-2: #aaa59c;
+  --text-3: #8a857d;
+  --text-inverse: #16120b;
+
+  /* Acento: latão */
+  --brass: #d6a955;
+  --brass-strong: #ecc06c;
+  --brass-soft: rgb(214 169 85 / 0.14);
+  --brass-line: rgb(214 169 85 / 0.38);
+
+  /* Adversário / IA */
+  --steel: #92b3cc;
+  --steel-soft: rgb(146 179 204 / 0.14);
+
+  /* Semântica (sempre acompanhada de ícone ou texto) */
+  --good: #62c9a1;
+  --good-soft: rgb(98 201 161 / 0.14);
+  --warn: #e7b24e;
+  --warn-soft: rgb(231 178 78 / 0.14);
+  --bad: #ea735d;
+  --bad-soft: rgb(234 115 93 / 0.14);
+  --brilliant: #5cbcec;
+  --brilliant-soft: rgb(92 188 236 / 0.15);
+
+  /* Tabuleiro */
+  --sq-light: #cdb996;
+  --sq-dark: #5d4332;
+  --sq-dark-2: #533b2c;
+  --board-frame: #2a1f18;
+  --piece-ivory-1: #fbf6ec;
+  --piece-ivory-2: #d9cfbd;
+  --piece-ebony-1: #3a3739;
+  --piece-ebony-2: #121113;
+
+  /* Tipografia */
+  --font-display: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-3xl: 2.75rem;
+  --fs-4xl: clamp(2.75rem, 5vw + 1rem, 4.5rem);
+
+  /* Espaço (4pt) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* Raios e elevação */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-full: 999px;
+  --shadow-1: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --shadow-3: 0 30px 80px -20px rgb(0 0 0 / 0.85), 0 0 0 1px var(--line);
+
+  /* Movimento */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 120ms;
+  --t-med: 220ms;
+  --t-slow: 420ms;
+
+  /* Camadas */
+  --z-nav: 20;
+  --z-overlay: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+
+  --nav-width: 232px;
+  --bottom-nav-height: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-med: 0ms;
+    --t-slow: 0ms;
+  }
+}

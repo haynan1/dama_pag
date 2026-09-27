@@ -1,0 +1,93 @@
+.layout {
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+
+.board {
+  width: 100%;
+  max-width: min(100%, calc(100dvh - 220px));
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.panel {
+  position: sticky;
+  top: var(--s-6);
+}
+
+.clue {
+  padding: var(--s-3) var(--s-4);
+  border-left: 2px solid var(--brilliant);
+  background: var(--brilliant-soft);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  font-size: var(--fs-sm);
+}
+
+.result {
+  display: grid;
+  gap: var(--s-3);
+  animation: in var(--t-slow) var(--ease-out);
+}
+
+@keyframes in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  line-height: 1;
+}
+
+.verdict svg {
+  width: 30px;
+  height: 30px;
+}
+
+.verdict .mono {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--brass-strong);
+}
+
+.correct .verdict svg {
+  color: var(--good);
+}
+
+.wrong .verdict svg {
+  color: var(--bad);
+}
+
+.headline {
+  font-weight: 600;
+}
+
+.details {
+  margin: 0;
+  padding-left: var(--s-5);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  display: grid;
+  gap: var(--s-1);
+}
+
+.lineText,
+.nextDue {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
