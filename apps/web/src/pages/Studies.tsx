@@ -125,7 +125,14 @@ function StudyCard({
   return (
     <Card className={s.card}>
       <div className={s.thumb} inert aria-hidden="true">
-        <Board variant={study.variant} fen={study.fen} orientation={side} movable={null} label="" />
+        <Board
+          variant={study.variant}
+          fen={study.fen}
+          orientation={side}
+          movable={null}
+          coordinates={false}
+          label=""
+        />
       </div>
       <div className={s.body}>
         <div className={s.meta}>

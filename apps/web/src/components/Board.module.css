@@ -311,3 +311,43 @@
   color: var(--brass-strong);
   text-align: center;
 }
+
+/*
+ * Nome de cada casa, sempre no mesmo canto: o olho aprende onde procurar. Sobre a peça ganha um
+ * fundo para continuar legível sem esconder a peça.
+ */
+.coords {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.coordCell {
+  position: absolute;
+}
+
+.coord,
+.coordOnPiece {
+  position: absolute;
+  left: 5%;
+  top: 4%;
+  padding: 0.14em 0.3em;
+  border-radius: 0.36em;
+  font-family: var(--font-mono);
+  font-size: max(8px, calc(100cqi / var(--size) * 0.19));
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: rgb(236 222 196 / 0.62);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background var(--t-med) var(--ease-out),
+    color var(--t-med) var(--ease-out);
+}
+
+.coordOnPiece {
+  color: rgb(246 236 216 / 0.92);
+  background: rgb(18 12 8 / 0.62);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+}

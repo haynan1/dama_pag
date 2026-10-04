@@ -2,6 +2,7 @@ import { Position } from '@dama/engine';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Board, type Pace } from '../src/components/Board.tsx';
+import { moveDuration, TEMPO } from '../src/lib/motion.ts';
 
 interface Call {
   frames: Keyframe[];
@@ -126,5 +127,47 @@ describe('Animação do último lance', () => {
     const { anim } = animateMove('opponent', INITIAL, simple);
     fireEvent.pointerDown(screen.getByRole('group'));
     expect(anim.finish).toHaveBeenCalled();
+  });
+});
+
+describe('Rebobinar da encenação', () => {
+  it('volta a peça pelo caminho inverso em vez de saltar, inclusive depois de uma captura', () => {
+    // Brancas c3 capturam d4 e f6 (c3xe5xg7); o quadro seguinte desfaz o lance.
+    const start = 'W:W22:B18,11';
+    const after = play(start, capture);
+    expect(after.lastMove.path).toHaveLength(3);
+    const { rerender } = render(
+      <Board variant="brazilian" fen={after.fen} orientation="white" movable={null} label="tab" />,
+    );
+    calls = [];
+    rerender(
+      <Board
+        variant="brazilian"
+        fen={start}
+        orientation="white"
+        movable={null}
+        lastMove={{ path: [...after.lastMove.path].reverse(), captures: [] }}
+        pace="quick"
+        label="tab"
+      />,
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.anim.finish).not.toHaveBeenCalled();
+  });
+});
+
+describe('Duração anunciada para a encenação do mentor', () => {
+  it('bate com a animação que o tabuleiro de fato executa', () => {
+    for (const pace of ['quick', 'own', 'opponent'] as const) {
+      const { options } = animateMove(pace, INITIAL, simple);
+      expect(Number(options.delay) + Number(options.duration)).toBe(moveDuration(pace, 1, false));
+      cleanup();
+      calls = [];
+    }
+    // Captura dupla: trajeto + o sumiço da última peça capturada.
+    const { options } = animateMove('own', 'W:W22:B18,11', capture);
+    expect(Number(options.delay) + Number(options.duration)).toBe(
+      moveDuration('own', 2, true) - TEMPO.own.capture.vanish,
+    );
   });
 });

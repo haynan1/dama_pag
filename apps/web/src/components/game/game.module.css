@@ -819,3 +819,114 @@ button.moveCell:hover {
   flex: 1;
   text-decoration: none;
 }
+
+/* ================= Assistir no tabuleiro ================= */
+.watchHero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--brass-line);
+  background: linear-gradient(135deg, rgb(214 169 85 / 0.16), rgb(214 169 85 / 0.04) 70%), var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  transition:
+    border-color var(--t-med) var(--ease-out),
+    transform var(--t-med) var(--ease-out);
+}
+
+.watchHero:hover {
+  border-color: var(--brass-strong);
+}
+
+.watchHero:active {
+  transform: scale(0.99);
+}
+
+.watchIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--brass-strong);
+  color: var(--text-inverse);
+  box-shadow: 0 0 0 6px var(--brass-soft);
+}
+
+.watchIcon svg {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+}
+
+.watchText {
+  display: grid;
+  gap: 2px;
+}
+
+.watchText strong {
+  font-size: var(--fs-md);
+  font-weight: 650;
+}
+
+.watchText span {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.watchPlan {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-full);
+  border: 1px solid var(--brass-line);
+  background: var(--brass-soft);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--brass-strong);
+}
+
+.watchPlan:hover {
+  border-color: var(--brass-strong);
+}
+
+.watchPlan svg {
+  width: 12px;
+  height: 12px;
+}
+
+.replyRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-2);
+}
+
+.watchLine {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--steel);
+}
+
+.watchLine:hover {
+  border-color: rgb(146 179 204 / 0.4);
+  color: var(--text);
+}
+
+.watchLine svg {
+  width: 14px;
+  height: 14px;
+}

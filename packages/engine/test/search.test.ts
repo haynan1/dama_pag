@@ -9,6 +9,7 @@ import {
   hint,
   MATE,
   moveAccuracy,
+  moveKey,
   moveNotation,
   Position,
   reviewMove,
@@ -118,6 +119,19 @@ describe('mentor', () => {
     expect(tree.nodes[0]!.children[0]!.side).toBe(-1);
     expect(tree.bestLine).toHaveLength(3);
     expect(tree.summary).toContain('Melhor plano');
+  });
+
+  it('a continuação de cada nó é uma sequência legal a partir dele', () => {
+    const root = Position.initial('brazilian');
+    const tree = buildLookahead(searcher, root, { depth: 6, timeMs: 1500 });
+    const leaf = tree.nodes[0]!.children[0]!.children[0]!;
+    expect(leaf.continuation.length).toBeGreaterThan(0);
+    const walker = root.clone();
+    for (const key of [tree.nodes[0]!.key, tree.nodes[0]!.children[0]!.key, leaf.key, ...leaf.continuation]) {
+      const move = walker.legalMoves().find((m) => moveKey(m) === key);
+      expect(move, key).toBeDefined();
+      walker.make(move!);
+    }
   });
 
   it('captura seguida de recaptura é troca, não sacrifício', () => {

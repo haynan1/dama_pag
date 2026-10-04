@@ -2,6 +2,7 @@ import { algebraic, geometry, type Move, moveKey, Position, VARIANTS, type Varia
 import type { Side } from '@dama/protocol';
 import { Crown } from '@phosphor-icons/react';
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -12,6 +13,8 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type Pace, TEMPO } from '../lib/motion.ts';
+import { useCoordinates } from '../lib/preferences.ts';
 import styles from './Board.module.css';
 
 export type ArrowTone = 'brass' | 'steel' | 'hint' | 'good' | 'bad';
@@ -40,38 +43,15 @@ export interface BoardProps {
    * `quick` é para navegar por lances (revisão, análise).
    */
   readonly pace?: Pace;
+  /**
+   * Escreve o nome de cada casa escura (a1, c3…). Sem valor, segue a preferência do aparelho;
+   * `false` para miniaturas.
+   */
+  readonly coordinates?: boolean;
   readonly label: string;
 }
 
-interface Tempo {
-  /** Respiro antes de a peça sair: separa o lance do adversário do seu. */
-  readonly beat: number;
-  readonly lift: number;
-  readonly hop: number;
-  /** Parada em cada casa de pouso entre capturas. */
-  readonly rest: number;
-  readonly land: number;
-  readonly vanish: number;
-}
-
-export type Pace = 'quick' | 'own' | 'opponent';
-
-const STAGED = {
-  simple: { beat: 0, lift: 170, hop: 460, rest: 0, land: 190, vanish: 360 },
-  capture: { beat: 0, lift: 170, hop: 400, rest: 130, land: 190, vanish: 360 },
-} satisfies Record<string, Tempo>;
-
-const TEMPO: Record<Pace, { simple: Tempo; capture: Tempo }> = {
-  quick: {
-    simple: { beat: 0, lift: 0, hop: 230, rest: 0, land: 0, vanish: 260 },
-    capture: { beat: 0, lift: 0, hop: 190, rest: 0, land: 0, vanish: 260 },
-  },
-  own: STAGED,
-  opponent: {
-    simple: { ...STAGED.simple, beat: 260 },
-    capture: { ...STAGED.capture, beat: 260 },
-  },
-};
+export type { Pace };
 
 /** Quanto falta para a animação acabar (ms), incluindo o atraso inicial. */
 function remaining(anim: Animation): number {
@@ -110,6 +90,8 @@ export function Board(props: BoardProps) {
     pace = 'quick',
     label,
   } = props;
+  const [coordsPreference] = useCoordinates();
+  const coordinates = props.coordinates ?? coordsPreference;
   const size = VARIANTS[variant].size;
   const geo = geometry(size);
   const position = useMemo(() => Position.fromFen(variant, fen), [variant, fen]);
@@ -495,6 +477,19 @@ export function Board(props: BoardProps) {
     return { left: `${v.x * pct}%`, top: `${v.y * pct}%`, width: `${pct}%`, height: `${pct}%` };
   };
 
+  const coordNodes: ReactNode[] = [];
+  if (coordinates) {
+    for (let sq = 0; sq < geo.squares; sq++) {
+      coordNodes.push(
+        <div key={sq} className={styles.coordCell} style={pieceStyle(sq)}>
+          <span className={position.board[sq] ? styles.coordOnPiece : styles.coord}>
+            {algebraic(geo, sq)}
+          </span>
+        </div>,
+      );
+    }
+  }
+
   const pieceNodes: ReactNode[] = [];
   for (let sq = 0; sq < position.board.length; sq++) {
     const p = position.board[sq]!;
@@ -525,7 +520,7 @@ export function Board(props: BoardProps) {
   const ranks = Array.from({ length: size }, (_, i) => (flip ? i + 1 : size - i));
 
   return (
-    <div className={styles.frame} data-size={size}>
+    <div className={styles.frame} data-size={size} style={{ '--size': size } as CSSProperties}>
       <div
         ref={boardRef}
         className={`${styles.board} ${drag?.active ? styles.dragging : ''}`}
@@ -556,6 +551,12 @@ export function Board(props: BoardProps) {
           ))}
           {pieceNodes}
         </div>
+
+        {coordinates && (
+          <div className={styles.coords} aria-hidden="true">
+            {coordNodes}
+          </div>
+        )}
 
         {arrows.length > 0 && (
           <svg className={styles.arrows} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
@@ -592,20 +593,25 @@ export function Board(props: BoardProps) {
         )}
 
         {/* Cor em contraste com a casa sob o rótulo: o canto inferior esquerdo é sempre escuro. */}
-        <div className={styles.files} aria-hidden="true">
-          {files.map((f, x) => (
-            <span key={f} className={x % 2 === 0 ? styles.onDark : styles.onLight}>
-              {f}
-            </span>
-          ))}
-        </div>
-        <div className={styles.ranks} aria-hidden="true">
-          {ranks.map((r, y) => (
-            <span key={r} className={(y + size - 1) % 2 === 0 ? styles.onDark : styles.onLight}>
-              {r}
-            </span>
-          ))}
-        </div>
+        {/* Com o nome em cada casa, a régua da borda seria redundante. */}
+        {!coordinates && (
+          <div className={styles.files} aria-hidden="true">
+            {files.map((f, x) => (
+              <span key={f} className={x % 2 === 0 ? styles.onDark : styles.onLight}>
+                {f}
+              </span>
+            ))}
+          </div>
+        )}
+        {!coordinates && (
+          <div className={styles.ranks} aria-hidden="true">
+            {ranks.map((r, y) => (
+              <span key={r} className={(y + size - 1) % 2 === 0 ? styles.onDark : styles.onLight}>
+                {r}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       {candidates && (
         <p className={styles.disambiguate} role="status">

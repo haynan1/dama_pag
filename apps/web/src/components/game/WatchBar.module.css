@@ -1,0 +1,288 @@
+/*
+ * Narração da encenação. A cor acompanha quem joga — latão para você, aço para o adversário —
+ * a mesma convenção das setas da árvore.
+ */
+.bar {
+  --accent: var(--text-3);
+  --accent-soft: rgb(255 255 255 / 0.04);
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-3) var(--s-2) var(--s-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), transparent 60%), var(--surface);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+  animation: rise var(--t-slow) var(--ease-out);
+  transition: border-color var(--t-slow) var(--ease-out);
+}
+
+.bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+  transition: background var(--t-slow) var(--ease-out);
+}
+
+.bar[data-actor="you"] {
+  --accent: var(--brass-strong);
+  --accent-soft: var(--brass-soft);
+  border-color: var(--brass-line);
+}
+
+.bar[data-actor="them"] {
+  --accent: var(--steel);
+  --accent-soft: var(--steel-soft);
+  border-color: rgb(146 179 204 / 0.38);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin: -4px 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text-2);
+}
+
+.close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stage {
+  display: grid;
+  gap: var(--s-1);
+  min-height: 2.9em;
+  align-content: center;
+}
+
+.narration {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: 1.45;
+  color: var(--text-2);
+  animation: fade var(--t-med) var(--ease-out);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.who {
+  font-weight: 650;
+  color: var(--accent);
+}
+
+.bar[data-actor="none"] .who {
+  color: var(--text);
+}
+
+.route {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  vertical-align: 1px;
+}
+
+/* Mesma etiqueta que aparece no canto da casa: o olho liga o texto ao tabuleiro. */
+.square {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: rgb(18 12 8 / 0.7);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: rgb(246 236 216);
+}
+
+.arrow {
+  color: var(--text-3);
+}
+
+.promote {
+  font-weight: 650;
+  color: var(--brass-strong);
+}
+
+.note {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+  color: var(--text);
+  animation: fade var(--t-slow) var(--ease-out);
+}
+
+.rewind {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--text-3);
+}
+
+.rewind svg {
+  width: 18px;
+  height: 18px;
+  animation: spinBack 900ms linear infinite;
+}
+
+@keyframes spinBack {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.pips {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+  margin: 0 var(--s-2);
+  padding: 0;
+  list-style: none;
+}
+
+.pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  transition:
+    background var(--t-med) var(--ease-out),
+    opacity var(--t-med) var(--ease-out);
+}
+
+.pip[data-actor="you"][data-state="done"],
+.pip[data-actor="you"][data-state="now"] {
+  background: var(--brass-strong);
+}
+
+.pip[data-actor="them"][data-state="done"],
+.pip[data-actor="them"][data-state="now"] {
+  background: var(--steel);
+}
+
+.pip[data-state="done"] {
+  opacity: 0.45;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.control {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: none;
+  color: var(--text-2);
+}
+
+.control:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.control:disabled {
+  opacity: 0.35;
+}
+
+.control svg {
+  width: 18px;
+  height: 18px;
+}
+
+.primary {
+  background: var(--text);
+  color: var(--text-inverse);
+}
+
+.primary:hover:not(:disabled) {
+  background: #fff;
+  color: var(--text-inverse);
+}
+
+.speed {
+  flex: none;
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-full);
+  border: 1px solid var(--line-strong);
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.speed[aria-pressed="true"] {
+  border-color: var(--brass-line);
+  background: var(--brass-soft);
+  color: var(--brass-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .narration,
+  .note,
+  .rewind svg {
+    animation: none;
+  }
+}

@@ -374,6 +374,11 @@ export interface LookaheadNode {
   /** Pontuação do ponto de vista de quem pediu a análise. */
   readonly score: number;
   readonly insight: Insight;
+  /**
+   * Linha principal do motor depois deste lance (chaves de lance). Nos nós finais da árvore é o
+   * que permite encenar a sequência além das três jogadas.
+   */
+  readonly continuation: readonly string[];
   readonly children: readonly LookaheadNode[];
 }
 
@@ -436,6 +441,7 @@ export function buildLookahead(
         side: pos.side,
         score: pos.side === me ? line.score : -line.score,
         insight: line.insight,
+        continuation: line.pvKeys.slice(1),
         children,
       };
     });

@@ -9,10 +9,11 @@ import {
   CornersIn,
   CornersOut,
   Flag,
+  GridFour,
   Handshake,
   WifiSlash,
 } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { Board, type BoardArrow } from '../components/Board.tsx';
 import { EvalBar } from '../components/game/EvalBar.tsx';
@@ -20,13 +21,16 @@ import { MentorPanel } from '../components/game/MentorPanel.tsx';
 import { MoveList } from '../components/game/MoveList.tsx';
 import { PlayerCard } from '../components/game/PlayerCard.tsx';
 import { ResultDialog } from '../components/game/ResultDialog.tsx';
+import { WatchBar } from '../components/game/WatchBar.tsx';
 import { useToast } from '../components/Toasts.tsx';
 import { Badge, Button, Card, Segmented, Skeleton } from '../components/ui.tsx';
 import { copyText } from '../lib/clipboard.ts';
 import { REASON_LABEL, SIDE_LABEL } from '../lib/format.ts';
 import { useFullscreen } from '../lib/fullscreen.ts';
+import { useCoordinates } from '../lib/preferences.ts';
 import { useMeta } from '../lib/queries.ts';
 import { useGame } from '../lib/useGame.ts';
+import { usePlayback } from '../lib/usePlayback.ts';
 import s from './GamePage.module.css';
 
 type Tab = 'mentor' | 'moves';
@@ -43,6 +47,27 @@ export function GamePage({ id }: { id: string }) {
   const [confirmResign, setConfirmResign] = useState(false);
   const [dialogClosed, setDialogClosed] = useState(false);
   const fullscreen = useFullscreen({ restore: true });
+  const [coordinates, setCoordinates] = useCoordinates();
+  // Encenação a partir da posição confirmada pelo servidor; qualquer lance novo a encerra.
+  const boardColRef = useRef<HTMLDivElement>(null);
+  const playback = usePlayback(game?.variant, game?.fen, boardColRef);
+  // Assistir não pode custar tempo de relógio: pausa enquanto encena e retoma ao terminar.
+  const autoPaused = useRef(false);
+  const { send } = live;
+  useEffect(() => {
+    if (playback.active || !autoPaused.current) return;
+    autoPaused.current = false;
+    send({ type: 'pause', paused: false });
+  }, [playback.active, send]);
+  // Saiu da tela no meio da encenação: não deixa a partida presa no modo estudo.
+  useEffect(
+    () => () => {
+      if (!autoPaused.current) return;
+      autoPaused.current = false;
+      send({ type: 'pause', paused: false });
+    },
+    [send],
+  );
 
   // Atalho "F" alterna a tela cheia (fora de campos de texto).
   useEffect(() => {
@@ -101,8 +126,14 @@ export function GamePage({ id }: { id: string }) {
 
   const hintArrows: BoardArrow[] =
     live.hint && hintStage === 2 ? [{ path: live.hint.path, tone: 'hint' }] : [];
-  const arrows = preview ?? hintArrows;
-  const highlight = live.hint && hintStage >= 1 ? [live.hint.square] : [];
+  const frame = playback.frame;
+  const watchedPly = frame?.phase === 'play' ? playback.scene?.plies[frame.ply] : undefined;
+  const arrows: BoardArrow[] = frame
+    ? watchedPly
+      ? [{ path: watchedPly.path, tone: watchedPly.actor === 'you' ? 'brass' : 'steel' }]
+      : []
+    : (preview ?? hintArrows);
+  const highlight = !frame && live.hint && hintStage >= 1 ? [live.hint.square] : [];
 
   const statusText = (() => {
     if (game.status === 'waiting') return 'Aguardando adversário';
@@ -112,6 +143,7 @@ export function GamePage({ id }: { id: string }) {
         ? `${SIDE_LABEL[r.winner]} venceram por ${REASON_LABEL[r.reason]}`
         : `Empate por ${REASON_LABEL[r.reason]}`;
     }
+    if (frame) return 'Assistindo a linha';
     if (game.paused) return 'Modo estudo — partida pausada';
     if (yourTurn) return 'Sua vez';
     if (game.aiThinking) return 'IA pensando…';
@@ -136,7 +168,7 @@ export function GamePage({ id }: { id: string }) {
 
   return (
     <div className={s.layout}>
-      <div className={s.boardCol}>
+      <div ref={boardColRef} className={s.boardCol} data-watching={playback.active || undefined}>
         <div className={s.topBar}>
           <Link href="/" className={s.back} aria-label="Voltar ao início">
             <ArrowLeft aria-hidden="true" />
@@ -174,12 +206,12 @@ export function GamePage({ id }: { id: string }) {
           <div className={`${s.boardWrap} ${game.paused ? s.pausedBoard : ''}`}>
             <Board
               variant={game.variant}
-              fen={display.fen}
+              fen={frame?.fen ?? display.fen}
               orientation={orientation}
-              movable={yourTurn ? you : null}
+              movable={yourTurn && !frame ? you : null}
               onMove={(key) => live.move(key)}
-              lastMove={display.lastMove}
-              pace={display.lastMoveByOpponent ? 'opponent' : 'own'}
+              lastMove={frame ? frame.lastMove : display.lastMove}
+              pace={frame?.pace ?? (display.lastMoveByOpponent ? 'opponent' : 'own')}
               arrows={arrows}
               highlight={highlight}
               label={`Tabuleiro ${VARIANTS[game.variant].short}. ${statusText}.`}
@@ -223,53 +255,77 @@ export function GamePage({ id }: { id: string }) {
         </div>
         <div className={s.playerBottom}>{player(bottom)}</div>
 
-        <div className={s.controls} role="toolbar" aria-label="Ações da partida">
-          <Button variant="ghost" onClick={() => setFlipped((f) => !f)} aria-label="Virar tabuleiro">
-            <ArrowsDownUp aria-hidden="true" />
-            <span className={s.controlLabel}>Virar</span>
-          </Button>
-          {game.canUndo && (
-            <Button variant="ghost" onClick={() => live.send({ type: 'undo' })} aria-label="Desfazer lance">
-              <ArrowCounterClockwise aria-hidden="true" />
-              <span className={s.controlLabel}>Desfazer</span>
+        {playback.active ? (
+          <div className={s.watch}>
+            <WatchBar playback={playback} />
+          </div>
+        ) : (
+          <div className={s.controls} role="toolbar" aria-label="Ações da partida">
+            <Button variant="ghost" onClick={() => setFlipped((f) => !f)} aria-label="Virar tabuleiro">
+              <ArrowsDownUp aria-hidden="true" />
+              <span className={s.controlLabel}>Virar</span>
             </Button>
-          )}
-          {active && you && (
-            <>
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  live.send({
-                    type: 'draw',
-                    action: game.drawOffer && game.drawOffer !== you ? 'accept' : 'offer',
-                  })
-                }
-                disabled={game.drawOffer === you}
-                aria-label={game.drawOffer && game.drawOffer !== you ? 'Aceitar empate' : 'Propor empate'}
-              >
-                <Handshake aria-hidden="true" />
-                <span className={s.controlLabel}>
-                  {game.drawOffer === you ? 'Empate proposto' : game.drawOffer ? 'Aceitar empate' : 'Empate'}
-                </span>
+            <Button
+              variant="ghost"
+              onClick={() => setCoordinates(!coordinates)}
+              aria-pressed={coordinates}
+              aria-label="Mostrar o nome das casas"
+              title="Mostrar o nome de cada casa (a1, c3…)"
+            >
+              <GridFour weight={coordinates ? 'fill' : 'regular'} aria-hidden="true" />
+              <span className={s.controlLabel}>Casas</span>
+            </Button>
+            {game.canUndo && (
+              <Button variant="ghost" onClick={() => live.send({ type: 'undo' })} aria-label="Desfazer lance">
+                <ArrowCounterClockwise aria-hidden="true" />
+                <span className={s.controlLabel}>Desfazer</span>
               </Button>
-              {confirmResign ? (
-                <Button variant="danger" onClick={() => live.send({ type: 'resign' })} autoFocus>
-                  <Flag weight="fill" aria-hidden="true" /> Confirmar abandono
+            )}
+            {active && you && (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    live.send({
+                      type: 'draw',
+                      action: game.drawOffer && game.drawOffer !== you ? 'accept' : 'offer',
+                    })
+                  }
+                  disabled={game.drawOffer === you}
+                  aria-label={game.drawOffer && game.drawOffer !== you ? 'Aceitar empate' : 'Propor empate'}
+                >
+                  <Handshake aria-hidden="true" />
+                  <span className={s.controlLabel}>
+                    {game.drawOffer === you
+                      ? 'Empate proposto'
+                      : game.drawOffer
+                        ? 'Aceitar empate'
+                        : 'Empate'}
+                  </span>
                 </Button>
-              ) : (
-                <Button variant="ghost" onClick={() => setConfirmResign(true)} aria-label="Abandonar partida">
-                  <Flag aria-hidden="true" />
-                  <span className={s.controlLabel}>Abandonar</span>
-                </Button>
-              )}
-            </>
-          )}
-          {game.drawOffer && game.drawOffer !== you && active && (
-            <Button variant="ghost" onClick={() => live.send({ type: 'draw', action: 'decline' })}>
-              Recusar empate
-            </Button>
-          )}
-        </div>
+                {confirmResign ? (
+                  <Button variant="danger" onClick={() => live.send({ type: 'resign' })} autoFocus>
+                    <Flag weight="fill" aria-hidden="true" /> Confirmar abandono
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setConfirmResign(true)}
+                    aria-label="Abandonar partida"
+                  >
+                    <Flag aria-hidden="true" />
+                    <span className={s.controlLabel}>Abandonar</span>
+                  </Button>
+                )}
+              </>
+            )}
+            {game.drawOffer && game.drawOffer !== you && active && (
+              <Button variant="ghost" onClick={() => live.send({ type: 'draw', action: 'decline' })}>
+                Recusar empate
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <Card className={s.panel}>
@@ -299,8 +355,20 @@ export function GamePage({ id }: { id: string }) {
             onRequestHint={() => live.send({ type: 'hint' })}
             onRequestTree={() => live.send({ type: 'lookahead' })}
             onToggleMentor={(enabled) => live.send({ type: 'mentor', enabled })}
-            onPause={(paused) => live.send({ type: 'pause', paused })}
+            onPause={(paused) => {
+              // O jogador assumiu o modo estudo: a encenação não o desfaz ao terminar.
+              autoPaused.current = false;
+              live.send({ type: 'pause', paused });
+            }}
             onPreview={setPreview}
+            onWatch={(lines) => {
+              // Só pausa se a encenação de fato começou; senão nada a retomaria depois.
+              if (!playback.watch(lines)) return;
+              if (active && game.clock && !game.paused) {
+                autoPaused.current = true;
+                send({ type: 'pause', paused: true });
+              }
+            }}
           />
         ) : (
           <MoveList

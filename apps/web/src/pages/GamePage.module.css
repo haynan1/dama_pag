@@ -16,12 +16,20 @@
 .boardCol {
   /* Altura consumida por tudo que não é tabuleiro: topo (44) + 2 jogadores (2×60) + controles (60) + respiros. */
   --chrome: 290px;
+  /* Altura extra da narração ao assistir uma linha, além dos controles que ela substitui. */
+  --watch: 0px;
   display: grid;
   gap: var(--s-2);
   width: 100%;
   /* O tabuleiro nunca passa da altura útil da tela. */
-  max-width: min(100%, calc(100dvh - var(--chrome)));
+  max-width: min(100%, calc(100dvh - var(--chrome) - var(--watch)));
   margin: 0 auto;
+  /* Encolhe durante a abertura da encenação, antes do primeiro lance andar. */
+  transition: max-width var(--t-slow) var(--ease-out);
+}
+
+.boardCol[data-watching] {
+  --watch: 112px;
 }
 
 /* Tela cheia no desktop: sem trilho e com respiros menores, o tabuleiro cresce. */
@@ -69,7 +77,8 @@
     grid-area: p2;
   }
 
-  .controls {
+  .controls,
+  .watch {
     grid-area: ctl;
     justify-content: flex-start;
   }
@@ -263,6 +272,10 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--s-1);
+  padding-top: var(--s-2);
+}
+
+.watch {
   padding-top: var(--s-2);
 }
 

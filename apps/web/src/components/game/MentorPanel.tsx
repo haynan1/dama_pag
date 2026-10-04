@@ -3,6 +3,7 @@ import type { GameView, HintView, ReviewView } from '@dama/protocol';
 import { Brain, Lightbulb, Pause, Play, TreeStructure } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { formatScore } from '../../lib/format.ts';
+import type { WatchLine } from '../../lib/playback.ts';
 import type { BoardArrow } from '../Board.tsx';
 import { Button, ClassificationBadge, Skeleton, Switch } from '../ui.tsx';
 import s from './game.module.css';
@@ -22,6 +23,7 @@ interface Props {
   readonly onToggleMentor: (enabled: boolean) => void;
   readonly onPause: (paused: boolean) => void;
   readonly onPreview: (arrows: BoardArrow[] | null) => void;
+  readonly onWatch: (lines: WatchLine[]) => void;
 }
 
 export function MentorPanel(props: Props) {
@@ -161,7 +163,7 @@ export function MentorPanel(props: Props) {
           </Button>
         )}
         {busy.lookahead && !tree && <TreeSkeleton />}
-        {tree && <LookaheadTree tree={tree} onPreview={props.onPreview} />}
+        {tree && <LookaheadTree tree={tree} onPreview={props.onPreview} onWatch={props.onWatch} />}
       </section>
     </div>
   );

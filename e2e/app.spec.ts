@@ -89,6 +89,25 @@ test('contra a IA com mentor: lance, revisão, dica, árvore, estudo, desfazer, 
   await shot(page, 'game-mentor');
   await expectAccessible(page);
 
+  // Assistir: a IA joga pelos dois lados, narra cada lance e volta à posição atual.
+  const board = page.getByRole('group', { name: /Tabuleiro/ });
+  await expect(board.getByText('d4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Assistir no tabuleiro/ }).click();
+  const watching = page.getByRole('region', { name: 'Assistindo a linha do mentor' });
+  await expect(watching).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Assistindo' })).toBeVisible();
+  await expect(watching.getByText(/^Você$/)).toBeVisible({ timeout: 5_000 });
+  // No celular o botão fica abaixo do tabuleiro: a tela rola até ele.
+  await expect.poll(async () => (await board.boundingBox())!.y).toBeGreaterThanOrEqual(-1);
+  const bar = await watching.boundingBox();
+  expect(bar!.y + bar!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+  await shot(page, 'game-watch');
+  await watching.getByRole('button', { name: 'Pausar' }).click();
+  await expectAccessible(page);
+  await watching.getByRole('button', { name: 'Parar e voltar ao jogo' }).click();
+  await expect(watching).toBeHidden();
+  await expect(yourTurn(page)).toBeVisible();
+
   await page.getByRole('switch', { name: /Modo estudo/ }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Modo estudo' })).toBeVisible();
   await page.getByRole('switch', { name: /Modo estudo/ }).click();
@@ -160,6 +179,33 @@ test('análise livre: melhores lances e lances dos dois lados', async ({ page })
   await expect(page.getByRole('button', { name: /^f4, pedra branca/ })).toBeVisible();
   await shot(page, 'analysis');
   await expectAccessible(page);
+});
+
+test('análise livre: assistir a árvore no 12×12 e desligar o nome das casas', async ({ page }) => {
+  await page.goto('/analise');
+  await page.getByRole('radio', { name: '12×12' }).click();
+  const board = page.getByRole('group', { name: /Tabuleiro/ });
+  await expect(board.getByText('l12', { exact: true })).toBeAttached();
+  await expectNoHorizontalScroll(page);
+  await shot(page, 'analysis-12-coords');
+
+  await page.getByRole('button', { name: /3 jogadas à frente/ }).click();
+  await page.getByRole('button', { name: /Assistir no tabuleiro/ }).click({ timeout: 30_000 });
+  const watching = page.getByRole('region', { name: 'Assistindo a linha do mentor' });
+  await expect(watching.getByText(/^Você$/)).toBeVisible({ timeout: 5_000 });
+  // Durante a encenação o tabuleiro não aceita lances.
+  await expect(board.getByRole('button', { name: /pedra branca/ }).first()).not.toHaveClass(/grab/);
+  await shot(page, 'analysis-watch');
+  await watching.getByRole('button', { name: 'Pausar' }).click();
+  await expectAccessible(page);
+  await page.keyboard.press('Escape');
+  await expect(watching).toBeHidden();
+
+  await page.getByRole('button', { name: 'Casas' }).click();
+  await expect(board.getByText('l12', { exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Casas' })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Casas' }).click();
 });
 
 test('estudos, histórico, progresso e 404', async ({ page }) => {

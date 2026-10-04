@@ -15,18 +15,22 @@ import {
   BookmarkSimple,
   Broom,
   Cpu,
+  GridFour,
   TreeStructure,
 } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Board, type BoardArrow } from '../components/Board.tsx';
 import g from '../components/game/game.module.css';
 import { LookaheadTree } from '../components/game/LookaheadTree.tsx';
+import { WatchBar } from '../components/game/WatchBar.tsx';
 import { useToast } from '../components/Toasts.tsx';
 import { Button, Card, Segmented, Skeleton, ui } from '../components/ui.tsx';
 import { api } from '../lib/api.ts';
 import { formatScore } from '../lib/format.ts';
+import { useCoordinates } from '../lib/preferences.ts';
 import { keys } from '../lib/queries.ts';
+import { usePlayback } from '../lib/usePlayback.ts';
 import s from './Analysis.module.css';
 import p from './pages.module.css';
 
@@ -65,6 +69,7 @@ export default function Analysis() {
   const [busy, setBusy] = useState<'analyze' | 'lookahead' | null>(null);
   const [preview, setPreview] = useState<BoardArrow[] | null>(null);
   const [fenInput, setFenInput] = useState('');
+  const [coordinates, setCoordinates] = useCoordinates();
 
   const current = steps.at(-1)!;
   const position = useMemo(() => Position.fromFen(variant, current.fen), [variant, current.fen]);
@@ -72,6 +77,10 @@ export default function Analysis() {
   const over = position.legalMoves().length === 0;
   const liveAnalysis = analysis?.fen === current.fen ? analysis.data : null;
   const liveTree = tree?.fen === current.fen ? tree.data : null;
+  const boardColRef = useRef<HTMLDivElement>(null);
+  const playback = usePlayback(variant, current.fen, boardColRef);
+  const frame = playback.frame;
+  const watchedPly = frame?.phase === 'play' ? playback.scene?.plies[frame.ply] : undefined;
 
   const reset = (v: VariantId, fen = Position.initial(v).fen()) => {
     setVariant(v);
@@ -155,38 +164,58 @@ export default function Analysis() {
       </header>
 
       <div className={s.layout}>
-        <div className={s.boardCol}>
+        <div ref={boardColRef} className={s.boardCol}>
           <Board
             variant={variant}
-            fen={current.fen}
+            fen={frame?.fen ?? current.fen}
             orientation={orientation}
-            movable={side}
+            movable={frame ? null : side}
             onMove={play}
-            lastMove={current.move ? { path: current.move.path, captures: current.move.captures } : null}
-            arrows={preview ?? engineArrows}
+            lastMove={
+              frame
+                ? frame.lastMove
+                : current.move
+                  ? { path: current.move.path, captures: current.move.captures }
+                  : null
+            }
+            pace={frame?.pace ?? 'quick'}
+            arrows={
+              frame
+                ? watchedPly
+                  ? [{ path: watchedPly.path, tone: watchedPly.actor === 'you' ? 'brass' : 'steel' }]
+                  : []
+                : (preview ?? engineArrows)
+            }
             label={`Tabuleiro de análise. ${side === 'white' ? 'Brancas' : 'Pretas'} jogam.`}
           />
-          <div className={s.toolbar} role="toolbar" aria-label="Ferramentas">
-            <Button
-              variant="ghost"
-              onClick={() => setSteps((l) => (l.length > 1 ? l.slice(0, -1) : l))}
-              disabled={steps.length < 2}
-            >
-              <ArrowCounterClockwise aria-hidden="true" /> Voltar
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setOrientation((o) => (o === 'white' ? 'black' : 'white'))}
-            >
-              <ArrowsDownUp aria-hidden="true" /> Virar
-            </Button>
-            <Button variant="ghost" onClick={() => reset(variant)}>
-              <Broom aria-hidden="true" /> Reiniciar
-            </Button>
-            <Button variant="ghost" onClick={save}>
-              <BookmarkSimple aria-hidden="true" /> Salvar
-            </Button>
-          </div>
+          {playback.active ? (
+            <WatchBar playback={playback} />
+          ) : (
+            <div className={s.toolbar} role="toolbar" aria-label="Ferramentas">
+              <Button
+                variant="ghost"
+                onClick={() => setSteps((l) => (l.length > 1 ? l.slice(0, -1) : l))}
+                disabled={steps.length < 2}
+              >
+                <ArrowCounterClockwise aria-hidden="true" /> Voltar
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setOrientation((o) => (o === 'white' ? 'black' : 'white'))}
+              >
+                <ArrowsDownUp aria-hidden="true" /> Virar
+              </Button>
+              <Button variant="ghost" onClick={() => setCoordinates(!coordinates)} aria-pressed={coordinates}>
+                <GridFour weight={coordinates ? 'fill' : 'regular'} aria-hidden="true" /> Casas
+              </Button>
+              <Button variant="ghost" onClick={() => reset(variant)}>
+                <Broom aria-hidden="true" /> Reiniciar
+              </Button>
+              <Button variant="ghost" onClick={save}>
+                <BookmarkSimple aria-hidden="true" /> Salvar
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className={s.side}>
@@ -252,7 +281,13 @@ export default function Analysis() {
                 </p>
               )}
               {busy === 'lookahead' && <Skeleton height={200} />}
-              {liveTree && <LookaheadTree tree={liveTree} onPreview={setPreview} />}
+              {liveTree && (
+                <LookaheadTree
+                  tree={liveTree}
+                  onPreview={setPreview}
+                  onWatch={(lines) => playback.watch(lines)}
+                />
+              )}
             </div>
           </Card>
 
