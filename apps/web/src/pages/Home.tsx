@@ -14,6 +14,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import { Link, useLocation } from 'wouter';
+import { LanSheet } from '../campaign/ui/Lan.tsx';
 import { LevelMeter } from '../components/LevelMeter.tsx';
 import { useToast } from '../components/Toasts.tsx';
 import { Badge, Button, Card, Segmented, Switch, ui } from '../components/ui.tsx';
@@ -21,6 +22,7 @@ import { api } from '../lib/api.ts';
 import { copyText } from '../lib/clipboard.ts';
 import { greeting, relativeText } from '../lib/format.ts';
 import { keys, useMe, useMeta } from '../lib/queries.ts';
+import { TARGET } from '../platform/runtime.ts';
 import s from './Home.module.css';
 import p from './pages.module.css';
 
@@ -38,8 +40,15 @@ function timeControl(value: TimeValue): CreateGameInput['timeControl'] {
   return { initialSec: min * 60, incrementSec: inc };
 }
 
-export function Home() {
+/**
+ * No app Android o servidor roda no próprio aparelho: ninguém de fora entra numa sala dele. Jogar
+ * com outra pessoa é conectar o app a um servidor Dama da rede local (folha de rede local).
+ */
+const ON_DEVICE = TARGET === 'app';
+
+export function Home({ lan = 'closed' }: { lan?: 'closed' | 'open' | 'lost' }) {
   const me = useMe();
+  const [lanOpen, setLanOpen] = useState(lan !== 'closed');
   const meta = useMeta();
   const [, navigate] = useLocation();
   const toast = useToast();
@@ -116,15 +125,17 @@ export function Home() {
               <h2 id="nova-partida" className={s.cardTitle}>
                 Nova partida
               </h2>
-              <Segmented
-                label="Adversário"
-                value={opponent}
-                onChange={setOpponent}
-                options={[
-                  { value: 'ai', label: 'Contra a IA' },
-                  { value: 'lan', label: 'Na rede' },
-                ]}
-              />
+              {!ON_DEVICE && (
+                <Segmented
+                  label="Adversário"
+                  value={opponent}
+                  onChange={setOpponent}
+                  options={[
+                    { value: 'ai', label: 'Contra a IA' },
+                    { value: 'lan', label: 'Na rede' },
+                  ]}
+                />
+              )}
             </div>
 
             <div className={ui.field}>
@@ -275,53 +286,71 @@ export function Home() {
             </div>
           </Card>
 
-          <Card aria-labelledby="rede">
-            <div className={p.cardBody}>
-              <h2 id="rede" className={p.sectionTitle} style={{ marginBottom: 0 }}>
-                <Users weight="fill" aria-hidden="true" /> Entrar em uma sala
-              </h2>
-              <form className={s.joinForm} onSubmit={join}>
-                <label htmlFor="codigo" className="visually-hidden">
-                  Código da sala
-                </label>
-                <input
-                  id="codigo"
-                  className={`${ui.input} mono ${s.codeInput}`}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
-                  placeholder="K7QX2M"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  inputMode="text"
-                />
-                <Button type="submit" loading={joining}>
-                  Entrar
+          {ON_DEVICE ? (
+            <Card aria-labelledby="rede">
+              <div className={p.cardBody}>
+                <h2 id="rede" className={p.sectionTitle} style={{ marginBottom: 0 }}>
+                  <Users weight="fill" aria-hidden="true" /> Jogar com outra pessoa
+                </h2>
+                <p className="muted">
+                  Partidas entre aparelhos usam um computador da mesma Wi-Fi com o servidor Dama aberto.
+                </p>
+                <Button onClick={() => setLanOpen(true)}>
+                  <WifiHigh weight="bold" aria-hidden="true" /> Conectar na rede local
                 </Button>
-              </form>
-              {lanUrl && (
-                <div className={s.lan}>
-                  <span className={ui.help}>Outros dispositivos da rede abrem:</span>
-                  <button
-                    type="button"
-                    className={`${s.lanUrl} mono`}
-                    onClick={() => {
-                      void copyText(lanUrl).then((ok) =>
-                        toast(
-                          ok ? 'Endereço copiado' : 'Não foi possível copiar. Selecione e copie manualmente.',
-                          ok ? 'success' : 'error',
-                        ),
-                      );
-                    }}
-                    aria-label={`Copiar endereço ${lanUrl}`}
-                  >
-                    {lanUrl}
-                    <Copy aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </Card>
+              </div>
+            </Card>
+          ) : (
+            <Card aria-labelledby="rede">
+              <div className={p.cardBody}>
+                <h2 id="rede" className={p.sectionTitle} style={{ marginBottom: 0 }}>
+                  <Users weight="fill" aria-hidden="true" /> Entrar em uma sala
+                </h2>
+                <form className={s.joinForm} onSubmit={join}>
+                  <label htmlFor="codigo" className="visually-hidden">
+                    Código da sala
+                  </label>
+                  <input
+                    id="codigo"
+                    className={`${ui.input} mono ${s.codeInput}`}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
+                    placeholder="K7QX2M"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    inputMode="text"
+                  />
+                  <Button type="submit" loading={joining}>
+                    Entrar
+                  </Button>
+                </form>
+                {lanUrl && (
+                  <div className={s.lan}>
+                    <span className={ui.help}>Outros dispositivos da rede abrem:</span>
+                    <button
+                      type="button"
+                      className={`${s.lanUrl} mono`}
+                      onClick={() => {
+                        void copyText(lanUrl).then((ok) =>
+                          toast(
+                            ok
+                              ? 'Endereço copiado'
+                              : 'Não foi possível copiar. Selecione e copie manualmente.',
+                            ok ? 'success' : 'error',
+                          ),
+                        );
+                      }}
+                      aria-label={`Copiar endereço ${lanUrl}`}
+                    >
+                      {lanUrl}
+                      <Copy aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
 
           {profile && profile.stats.games > 0 && (
             <div className={s.quickStats}>
@@ -335,6 +364,17 @@ export function Home() {
           )}
         </div>
       </div>
+      {ON_DEVICE && (
+        <LanSheet
+          open={lanOpen}
+          lost={lan === 'lost'}
+          onClose={() => {
+            setLanOpen(false);
+            // Aberta pela rota /rede-local (volta de um servidor que caiu): fecha voltando ao início.
+            if (lan !== 'closed') navigate('/', { replace: true });
+          }}
+        />
+      )}
     </div>
   );
 }

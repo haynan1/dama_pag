@@ -10,6 +10,7 @@ import { type ReactNode, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useFullscreenState } from '../lib/fullscreen.ts';
 import { useMe } from '../lib/queries.ts';
+import { deviceCampaignUrl } from '../platform/runtime.ts';
 import s from './Shell.module.css';
 
 const NAV = [
@@ -47,6 +48,12 @@ const NAV = [
     match: (p: string) => p.startsWith('/progresso'),
   },
 ] as const;
+
+/**
+ * Página do servidor da rede local aberta dentro do app Android: o item "Campanha" volta para a
+ * campanha do aparelho em vez de abrir uma segunda aqui. Em todo o resto, rota interna.
+ */
+const deviceCampaign = deviceCampaignUrl();
 
 export function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -88,16 +95,23 @@ export function Shell({ children }: { children: ReactNode }) {
             const Icon = item.icon;
             return (
               <li key={item.href} className={'desktopOnly' in item ? s.desktopOnly : undefined}>
-                <Link href={item.href} className={s.item} aria-current={active ? 'page' : undefined}>
-                  <Icon weight={active ? 'fill' : 'regular'} aria-hidden="true" />
-                  <span>{item.label}</span>
-                  {item.href === '/estudos' && due > 0 && (
-                    <span className={s.count}>
-                      {due > 99 ? '99+' : due}
-                      <span className="visually-hidden"> estudos para revisar</span>
-                    </span>
-                  )}
-                </Link>
+                {deviceCampaign && item.href === '/campanha' ? (
+                  <a href={deviceCampaign} className={s.item}>
+                    <Icon weight="regular" aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </a>
+                ) : (
+                  <Link href={item.href} className={s.item} aria-current={active ? 'page' : undefined}>
+                    <Icon weight={active ? 'fill' : 'regular'} aria-hidden="true" />
+                    <span>{item.label}</span>
+                    {item.href === '/estudos' && due > 0 && (
+                      <span className={s.count}>
+                        {due > 99 ? '99+' : due}
+                        <span className="visually-hidden"> estudos para revisar</span>
+                      </span>
+                    )}
+                  </Link>
+                )}
               </li>
             );
           })}

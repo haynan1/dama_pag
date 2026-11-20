@@ -1,20 +1,17 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { MIGRATIONS } from './migrations.ts';
-
-export type Row = Record<string, SQLInputValue>;
-export type Params = Record<string, SQLInputValue>;
+import { DatabaseSync } from 'node:sqlite';
+import { type Params, SqlDatabase } from './sql.ts';
 
 /**
  * SQLite embutido do Node (sem addon nativo). Uma conexão síncrona por processo: as consultas
  * são de microssegundos e o trabalho pesado (IA) roda em threads separadas.
  */
-export class Database {
+export class Database extends SqlDatabase {
   readonly db: DatabaseSync;
-  lastHealthError: string | null = null;
 
   constructor(path: string) {
+    super();
     if (path !== ':memory:') mkdirSync(join(path, '..'), { recursive: true });
     this.db = new DatabaseSync(path);
     this.db.exec(`
@@ -29,27 +26,8 @@ export class Database {
     return new Database(join(dataDir, 'dama.db'));
   }
 
-  migrate(): number {
-    this.db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
-      version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL
-    ) STRICT`);
-    const applied = new Set(
-      this.all<{ version: number }>('SELECT version FROM schema_migrations').map((r) => r.version),
-    );
-    let count = 0;
-    for (const m of MIGRATIONS) {
-      if (applied.has(m.version)) continue;
-      this.transaction(() => {
-        this.db.exec(m.sql);
-        this.run('INSERT INTO schema_migrations (version, name, applied_at) VALUES (:v, :n, :t)', {
-          v: m.version,
-          n: m.name,
-          t: new Date().toISOString(),
-        });
-      });
-      count++;
-    }
-    return count;
+  exec(sql: string): void {
+    this.db.exec(sql);
   }
 
   get<T>(sql: string, params: Params = {}): T | undefined {
@@ -62,28 +40,6 @@ export class Database {
 
   run(sql: string, params: Params = {}): { changes: number | bigint } {
     return this.db.prepare(sql).run(params);
-  }
-
-  transaction<T>(fn: () => T): T {
-    this.db.exec('BEGIN IMMEDIATE');
-    try {
-      const result = fn();
-      this.db.exec('COMMIT');
-      return result;
-    } catch (err) {
-      this.db.exec('ROLLBACK');
-      throw err;
-    }
-  }
-
-  healthy(): boolean {
-    try {
-      return this.get<{ ok: number }>('SELECT 1 AS ok')?.ok === 1;
-    } catch (err) {
-      // Sonda de saúde: qualquer falha do SQLite significa "indisponível"; o motivo vai no log.
-      this.lastHealthError = err instanceof Error ? err.message : String(err);
-      return false;
-    }
   }
 
   close(): void {

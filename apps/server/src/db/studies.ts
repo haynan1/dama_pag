@@ -1,7 +1,7 @@
 import type { Classification, VariantId } from '@dama/engine';
 import type { StudyView } from '@dama/protocol';
-import type { Database } from './database.ts';
 import { newId, nowIso } from './ids.ts';
+import type { SqlDatabase } from './sql.ts';
 
 interface StudyRow {
   id: string;
@@ -81,9 +81,9 @@ export interface NewStudy {
 }
 
 export class StudyRepo {
-  private readonly db: Database;
+  private readonly db: SqlDatabase;
 
-  constructor(db: Database) {
+  constructor(db: SqlDatabase) {
     this.db = db;
   }
 

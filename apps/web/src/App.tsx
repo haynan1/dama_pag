@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Switch } from 'wouter';
+import { Route, Switch, useSearch } from 'wouter';
 import { Shell } from './components/Shell.tsx';
 import { Skeleton } from './components/ui.tsx';
 import { ApiError } from './lib/api.ts';
@@ -7,6 +7,8 @@ import { useMe } from './lib/queries.ts';
 import { Home } from './pages/Home.tsx';
 import { NotFound } from './pages/NotFound.tsx';
 import { Onboarding } from './pages/Onboarding.tsx';
+import { useNativeApp } from './platform/native-app.ts';
+import { TARGET } from './platform/runtime.ts';
 
 const GamePage = lazy(() => import('./pages/GamePage.tsx').then((m) => ({ default: m.GamePage })));
 const JoinRoom = lazy(() => import('./pages/JoinRoom.tsx').then((m) => ({ default: m.JoinRoom })));
@@ -35,7 +37,14 @@ function PageFallback() {
   );
 }
 
+/** `/rede-local` (só no app): início com a folha de rede local. `?falha=1` vem do errorPath. */
+function LanRoute() {
+  const search = useSearch();
+  return <Home lan={new URLSearchParams(search).has('falha') ? 'lost' : 'open'} />;
+}
+
 export function App() {
+  useNativeApp();
   const me = useMe();
 
   if (me.isPending) {
@@ -78,7 +87,9 @@ export function App() {
     <Shell>
       <Suspense fallback={<PageFallback />}>
         <Switch>
-          <Route path="/" component={Home} />
+          <Route path="/">
+            <Home />
+          </Route>
           <Route path="/partida/:id">{(p) => <GamePage id={p.id} />}</Route>
           <Route path="/sala/:code">{(p) => <JoinRoom code={p.code} />}</Route>
           <Route path="/historico" component={History} />
@@ -87,6 +98,11 @@ export function App() {
           <Route path="/estudos/treino" component={StudyTrainer} />
           <Route path="/analise" component={Analysis} />
           <Route path="/progresso" component={Progress} />
+          {TARGET === 'app' && (
+            <Route path="/rede-local">
+              <LanRoute />
+            </Route>
+          )}
           <Route path="/campanha" nest>
             <CampaignRoutes />
           </Route>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app-android-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--mode", "app", "--port", "5174", "--strictPort", "apps/web"],
+      "port": 5174
+    }
+  ]
+}

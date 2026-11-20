@@ -1,3 +1,5 @@
+// Tipos de req.cookies e reply.setCookie (o plugin é registrado em app.ts).
+import type {} from '@fastify/cookie';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { z } from 'zod';
 import type { ProfileRepo, ProfileRow } from '../db/profiles.ts';

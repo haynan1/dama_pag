@@ -31,7 +31,10 @@ export async function startServer(): Promise<TestServer> {
   const studies = new StudyRepo(db);
   const progress = new ProgressService(db, profiles, studies);
   const manager = new GameManager({ ai, games, progress, log });
-  const app = await buildApp({ config, db, ai, profiles, games, studies, progress, manager }, log);
+  const app = await buildApp(
+    { config, db, ai, profiles, games, studies, progress, manager, lanUrls: () => [] },
+    log,
+  );
   await app.listen({ host: '127.0.0.1', port: 0 });
   const { port } = app.server.address() as AddressInfo;
   return {

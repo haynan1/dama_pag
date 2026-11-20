@@ -6,14 +6,13 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
-import { AiBusyError } from './ai/pool.ts';
 import type { AppContext } from './context.ts';
-import { SessionError } from './games/session.ts';
+import { errorResponse, INTERNAL_ERROR } from './http/errors.ts';
 import { gameRoutes } from './http/routes/games.ts';
 import { metaRoutes } from './http/routes/meta.ts';
 import { profileRoutes } from './http/routes/profile.ts';
 import { studyRoutes } from './http/routes/studies.ts';
-import { HttpError, originAllowed } from './http/security.ts';
+import { originAllowed } from './http/security.ts';
 import { wsRoutes } from './http/ws.ts';
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -65,36 +64,11 @@ export async function buildApp(ctx: AppContext, logger: FastifyBaseLogger): Prom
   });
 
   app.setErrorHandler((err, req, reply) => {
-    if (err instanceof HttpError)
-      return reply.code(err.status).send({ error: { code: err.code, message: err.message } });
-    if (err instanceof AiBusyError) {
-      return reply
-        .code(503)
-        .header('retry-after', '5')
-        .send({ error: { code: 'ai-busy', message: err.message } });
-    }
-    if (err instanceof SessionError) {
-      const status =
-        err.code === 'not-found'
-          ? 404
-          : err.code === 'forbidden'
-            ? 403
-            : err.code === 'invalid-position'
-              ? 400
-              : 409;
-      return reply.code(status).send({ error: { code: err.code, message: err.message } });
-    }
-    const status = (err as { statusCode?: number }).statusCode;
-    if (status === 429) {
-      return reply
-        .code(429)
-        .send({ error: { code: 'rate-limited', message: 'Muitas requisições. Aguarde um pouco.' } });
-    }
-    if (status && status >= 400 && status < 500) {
-      return reply.code(status).send({ error: { code: 'bad-request', message: 'Requisição inválida' } });
-    }
-    req.log.error({ err }, 'erro não tratado');
-    return reply.code(500).send({ error: { code: 'internal', message: 'Erro interno' } });
+    const res = errorResponse(err);
+    if (!res) req.log.error({ err }, 'erro não tratado');
+    const { status, body, headers } = res ?? INTERNAL_ERROR;
+    if (headers) reply.headers(headers);
+    return reply.code(status).send(body);
   });
 
   profileRoutes(app, ctx);

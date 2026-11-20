@@ -1,7 +1,9 @@
 import type { ServerMessage } from '@dama/protocol';
 import { clientMessageSchema } from '@dama/protocol/schemas';
+// Tipos da rota `websocket: true` (o plugin é registrado em app.ts).
+import type {} from '@fastify/websocket';
 import type { FastifyInstance } from 'fastify';
-import { AiBusyError } from '../ai/pool.ts';
+import { AiBusyError } from '../ai/runner.ts';
 import type { AppContext } from '../context.ts';
 import type { Client } from '../games/session.ts';
 import { SessionError } from '../games/session.ts';
@@ -13,6 +15,37 @@ const BUCKET_SIZE = 30;
 const REFILL_PER_SEC = 10;
 
 let nextClientId = 1;
+
+/**
+ * Uma mensagem já decodificada de um cliente → partida. Compartilhado com o servidor embutido no
+ * app (que troca mensagens com a interface por postMessage, sem WebSocket).
+ */
+export function dispatchClientMessage(
+  ctx: AppContext,
+  client: Client,
+  data: unknown,
+  log: { error(obj: unknown, msg?: string): void },
+): void {
+  const parsed = clientMessageSchema.safeParse(data);
+  if (!parsed.success) {
+    client.send({ type: 'error', code: 'invalid-message', message: 'Mensagem inválida' });
+    return;
+  }
+  ctx.manager.handle(client, parsed.data).catch((err: unknown) => {
+    if (err instanceof SessionError) {
+      client.send({ type: 'error', code: err.code, message: err.message });
+    } else if (err instanceof AiBusyError) {
+      client.send({ type: 'error', code: 'ai-busy', message: err.message });
+    } else {
+      log.error({ err }, 'erro ao processar mensagem');
+      client.send({ type: 'error', code: 'internal', message: 'Erro interno. Tente novamente.' });
+    }
+  });
+}
+
+export function newClientId(): number {
+  return nextClientId++;
+}
 
 export function wsRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.get(
@@ -30,7 +63,7 @@ export function wsRoutes(app: FastifyInstance, ctx: AppContext): void {
     (socket, req) => {
       const profile = currentProfile(req, ctx.profiles);
       const client: Client = {
-        id: nextClientId++,
+        id: newClientId(),
         profileId: profile?.id ?? null,
         send(message: ServerMessage) {
           if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message));
@@ -78,21 +111,7 @@ export function wsRoutes(app: FastifyInstance, ctx: AppContext): void {
           client.send({ type: 'error', code: 'invalid-json', message: 'Mensagem inválida' });
           return;
         }
-        const parsed = clientMessageSchema.safeParse(data);
-        if (!parsed.success) {
-          client.send({ type: 'error', code: 'invalid-message', message: 'Mensagem inválida' });
-          return;
-        }
-        ctx.manager.handle(client, parsed.data).catch((err: unknown) => {
-          if (err instanceof SessionError) {
-            client.send({ type: 'error', code: err.code, message: err.message });
-          } else if (err instanceof AiBusyError) {
-            client.send({ type: 'error', code: 'ai-busy', message: err.message });
-          } else {
-            req.log.error({ err }, 'erro ao processar mensagem');
-            client.send({ type: 'error', code: 'internal', message: 'Erro interno. Tente novamente.' });
-          }
-        });
+        dispatchClientMessage(ctx, client, data, req.log);
       });
 
       socket.on('close', () => {

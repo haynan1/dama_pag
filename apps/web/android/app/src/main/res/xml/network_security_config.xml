@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  O servidor Dama da rede local fala HTTP puro: não existe certificado válido para 192.168.x.x.
+  O Android só restringe tráfego em claro por domínio, e não por faixa de IP — por isso a liberação é
+  geral aqui, e a restrição real fica na navegação: LanNavigationPlugin só deixa a WebView sair para
+  endereços privados. AdMob, Play Billing e RevenueCat usam HTTPS por conta própria.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

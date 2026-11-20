@@ -1,8 +1,8 @@
 import type { VariantId } from '@dama/engine';
 import type { AchievementView, ProfileView } from '@dama/protocol';
 import { ACHIEVEMENTS, levelFromXp } from '../progress/rewards.ts';
-import type { Database } from './database.ts';
 import { hashToken, newId, newToken, nowIso } from './ids.ts';
+import type { SqlDatabase } from './sql.ts';
 
 export interface ProfileRow {
   id: string;
@@ -26,9 +26,9 @@ const COLUMNS = `id, name, xp, rating, games, wins, losses, draws, current_strea
   study_streak, last_study_day, studies_solved, created_at, last_seen_at`;
 
 export class ProfileRepo {
-  private readonly db: Database;
+  private readonly db: SqlDatabase;
 
-  constructor(db: Database) {
+  constructor(db: SqlDatabase) {
     this.db = db;
   }
 

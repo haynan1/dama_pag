@@ -10,6 +10,7 @@ import type {
   StudyAttemptResult,
   StudyView,
 } from '@dama/protocol';
+import { serverFetch } from '@dama/transport';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -24,7 +25,7 @@ export class ApiError extends Error {
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(path, {
+    res = await serverFetch(path, {
       method,
       credentials: 'same-origin',
       headers: body === undefined ? {} : { 'content-type': 'application/json' },
@@ -41,6 +42,19 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new ApiError(res.status, data?.error?.code ?? 'http', data?.error?.message ?? `Erro ${res.status}`);
   }
   return data as T;
+}
+
+/** Texto puro (PDN). Mesmo tratamento de erro de `request`. */
+async function requestText(path: string): Promise<string> {
+  let res: Response;
+  try {
+    res = await serverFetch(path, { method: 'GET', credentials: 'same-origin' });
+  } catch (err) {
+    if (!(err instanceof TypeError)) throw err;
+    throw new ApiError(0, 'network', 'Sem conexão com o servidor. Verifique se ele está rodando.');
+  }
+  if (!res.ok) throw new ApiError(res.status, 'http', `Erro ${res.status}`);
+  return res.text();
 }
 
 export interface MeResponse {
@@ -90,6 +104,7 @@ export const api = {
       `/api/games${before ? `?before=${encodeURIComponent(before)}` : ''}`,
     ),
   game: (id: string) => request<GameDetail>('GET', `/api/games/${encodeURIComponent(id)}`),
+  pdn: (id: string) => requestText(`/api/games/${encodeURIComponent(id)}/pdn`),
   studies: () => request<{ studies: StudyView[]; due: number }>('GET', '/api/studies'),
   dueStudies: () => request<{ studies: StudyView[] }>('GET', '/api/studies/due'),
   createStudy: (input: {

@@ -176,7 +176,7 @@ export function Trail() {
   };
 
   return (
-    <div className={`${s.trail} ${TARGET === 'web' ? s.inShell : ''}`}>
+    <div className={`${s.trail} ${s.inShell}`}>
       <header className={s.topbar}>
         <span className={`${s.wordmark} display`}>
           <span className={s.mark} aria-hidden="true" />

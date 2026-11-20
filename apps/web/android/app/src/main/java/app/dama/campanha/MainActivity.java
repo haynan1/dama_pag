@@ -15,6 +15,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Plugins locais registram antes do super: é nele que a ponte e a WebView nascem.
+        registerPlugin(LanNavigationPlugin.class);
         super.onCreate(savedInstanceState);
         // Conteúdo por baixo das barras: a interface usa env(safe-area-inset-*) para não colidir.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);

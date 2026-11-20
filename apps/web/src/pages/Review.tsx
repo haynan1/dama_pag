@@ -7,6 +7,7 @@ import {
   CaretDoubleRight,
   CaretLeft,
   CaretRight,
+  Copy,
   DownloadSimple,
   MagnifyingGlass,
 } from '@phosphor-icons/react';
@@ -19,8 +20,10 @@ import { MoveList } from '../components/game/MoveList.tsx';
 import { useToast } from '../components/Toasts.tsx';
 import { Badge, Button, Card, ClassificationBadge, Skeleton, ui } from '../components/ui.tsx';
 import { api } from '../lib/api.ts';
+import { copyText } from '../lib/clipboard.ts';
 import { formatScore, REASON_LABEL } from '../lib/format.ts';
 import { keys } from '../lib/queries.ts';
+import { TARGET } from '../platform/runtime.ts';
 import p from './pages.module.css';
 import s from './Review.module.css';
 
@@ -134,9 +137,7 @@ export default function Review({ id }: { id: string }) {
         </div>
         <div className={p.row}>
           {g.accuracy !== null && <Badge tone="brass">Precisão {g.accuracy.toFixed(0)}%</Badge>}
-          <a className={`${ui.button} ${ui.small}`} href={`/api/games/${g.id}/pdn`} download>
-            <DownloadSimple aria-hidden="true" /> PDN
-          </a>
+          <PdnButton id={g.id} />
         </div>
       </header>
 
@@ -241,5 +242,37 @@ export default function Review({ id }: { id: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * PDN da partida. No navegador, download direto. No app Android o servidor está no aparelho e a
+ * WebView não baixa arquivos: o PDN vai para a área de transferência, pronto para colar.
+ */
+function PdnButton({ id }: { id: string }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  if (TARGET !== 'app') {
+    return (
+      <a className={`${ui.button} ${ui.small}`} href={`/api/games/${id}/pdn`} download>
+        <DownloadSimple aria-hidden="true" /> PDN
+      </a>
+    );
+  }
+  const copy = async () => {
+    setBusy(true);
+    try {
+      const ok = await copyText(await api.pdn(id));
+      toast(ok ? 'PDN copiado' : 'Não foi possível copiar o PDN.', ok ? 'success' : 'error');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Não foi possível gerar o PDN.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button size="small" onClick={() => void copy()} loading={busy}>
+      <Copy aria-hidden="true" /> Copiar PDN
+    </Button>
   );
 }

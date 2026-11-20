@@ -6,8 +6,8 @@ import { Trail } from './Trail.tsx';
 import { SimulatedAd } from './ui/SimulatedAd.tsx';
 
 /**
- * A campanha como módulo de rotas relativas: montada na raiz no app Android e em `/campanha`
- * no app da rede local. Nada aqui fala com o servidor — o motor roda no aparelho.
+ * A campanha como módulo de rotas relativas, montada em `/campanha` (no navegador e no app
+ * Android). Nada aqui fala com o servidor — o motor roda no aparelho.
  */
 export function CampaignRoutes() {
   const [ready, setReady] = useState(false);

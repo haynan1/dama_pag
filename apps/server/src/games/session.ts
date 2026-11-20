@@ -1,6 +1,6 @@
 import { type Color, Game, GameError, type GameResult, type MoveReview } from '@dama/engine';
 import type { ClockView, GameView, PlayerView, ReviewView, ServerMessage, Side } from '@dama/protocol';
-import type { AiRunner } from '../ai/pool.ts';
+import type { AiRunner } from '../ai/runner.ts';
 import type { GameRecord, GameRepo } from '../db/games.ts';
 import { nowIso } from '../db/ids.ts';
 
@@ -79,7 +79,7 @@ export class GameSession {
   private paused = false;
   private drawOffer: Side | null = null;
   private runningSince: number | null = null;
-  private flagTimer: NodeJS.Timeout | null = null;
+  private flagTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly mentorBusy = new Set<string>();
   private finishing = false;
 

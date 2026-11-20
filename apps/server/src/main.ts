@@ -6,7 +6,7 @@ import { GameRepo } from './db/games.ts';
 import { ProfileRepo } from './db/profiles.ts';
 import { StudyRepo } from './db/studies.ts';
 import { GameManager } from './games/manager.ts';
-import { lanUrls } from './http/routes/meta.ts';
+import { lanUrls } from './http/lan-urls.ts';
 import { createLogger } from './logger.ts';
 import { ProgressService } from './progress/service.ts';
 
@@ -21,12 +21,17 @@ const studies = new StudyRepo(db);
 const progress = new ProgressService(db, profiles, studies);
 const manager = new GameManager({ ai, games, progress, log });
 
-const app = await buildApp({ config, db, ai, profiles, games, studies, progress, manager }, log);
+const lan = (): string[] => (config.host === '127.0.0.1' ? [] : lanUrls(config.port));
+
+const app = await buildApp(
+  { config, db, ai, profiles, games, studies, progress, manager, lanUrls: lan },
+  log,
+);
 await app.listen({ host: config.host, port: config.port });
 
 log.info({ migrations: applied, aiWorkers: config.aiWorkers, data: config.dataDir }, 'servidor pronto');
 log.info(`Neste PC:        http://localhost:${config.port}`);
-if (config.host !== '127.0.0.1') for (const url of lanUrls(config.port)) log.info(`Na rede local:   ${url}`);
+for (const url of lan()) log.info(`Na rede local:   ${url}`);
 
 let closing = false;
 async function shutdown(signal: string): Promise<void> {

@@ -7,6 +7,7 @@ import { Board } from '../components/Board.tsx';
 import { Button, ui } from '../components/ui.tsx';
 import { api } from '../lib/api.ts';
 import { keys } from '../lib/queries.ts';
+import { TARGET } from '../platform/runtime.ts';
 import s from './Onboarding.module.css';
 
 /** Posição decorativa de meio-jogo, só para ambientar. */
@@ -83,7 +84,9 @@ export function Onboarding() {
             <ArrowRight weight="bold" aria-hidden="true" />
           </Button>
           <p className={ui.help}>
-            Seu perfil fica salvo neste navegador e no servidor deste PC. Nada sai da sua rede.
+            {TARGET === 'app'
+              ? 'Seu perfil, partidas e estudos ficam salvos neste aparelho. Funciona sem internet.'
+              : 'Seu perfil fica salvo neste navegador e no servidor deste PC. Nada sai da sua rede.'}
           </p>
         </form>
       </section>

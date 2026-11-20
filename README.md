@@ -39,7 +39,9 @@ npm run bench          # força do motor (profundidade, nós/s, partidas IA × I
 ## Como jogar e estudar
 
 - **Campanha**: uma trilha de 59 fases, do movimento da pedra ao nível Implacável, com vidas e
-  estrelas. É também o **app Android** (offline, com anúncios e compras) — veja [ANDROID.md](ANDROID.md).
+  estrelas.
+- **App Android**: o sistema completo no celular, offline — o servidor do Dama roda dentro do app.
+  Partidas entre aparelhos conectam no servidor da rede local. Veja [ANDROID.md](ANDROID.md).
 
 - **Contra a IA**: 10 níveis (Aprendiz → Implacável). Ligue o **modo mentor** para dicas em dois
   estágios, árvore de 3 jogadas, **modo estudo** (pausa o relógio e a IA) e desfazer.

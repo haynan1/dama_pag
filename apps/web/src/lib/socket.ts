@@ -1,14 +1,17 @@
 import type { ClientMessage, ServerMessage } from '@dama/protocol';
+import { openSocket, type SocketLike } from '@dama/transport';
 
 type Listener = (message: ServerMessage) => void;
 export type ConnectionState = 'connecting' | 'open' | 'closed';
+
+const OPEN = 1;
 
 /**
  * Conexão WebSocket única por aba, com reconexão exponencial e reassinatura automática
  * das partidas abertas. O cookie de sessão autentica o handshake.
  */
 class Socket {
-  private ws: WebSocket | null = null;
+  private ws: SocketLike | null = null;
   private readonly listeners = new Set<Listener>();
   private readonly stateListeners = new Set<(s: ConnectionState) => void>();
   private readonly subscriptions = new Map<string, number>();
@@ -18,20 +21,15 @@ class Socket {
   private heartbeat: ReturnType<typeof setInterval> | null = null;
   state: ConnectionState = 'closed';
 
-  private url(): string {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${proto}//${location.host}/ws`;
-  }
-
   private setState(s: ConnectionState): void {
     this.state = s;
     for (const l of this.stateListeners) l(s);
   }
 
   connect(): void {
-    if (this.ws && this.ws.readyState <= WebSocket.OPEN) return;
+    if (this.ws && this.ws.readyState <= OPEN) return;
     this.setState('connecting');
-    const ws = new WebSocket(this.url());
+    const ws = openSocket();
     this.ws = ws;
     ws.onopen = () => {
       this.attempt = 0;
@@ -74,7 +72,7 @@ class Socket {
   }
 
   send(message: ClientMessage): void {
-    if (this.ws?.readyState === WebSocket.OPEN) this.raw(message);
+    if (this.ws?.readyState === OPEN) this.raw(message);
     else {
       if (message.type !== 'ping' && message.type !== 'subscribe') this.outbox.push(message);
       this.connect();
@@ -91,7 +89,7 @@ class Socket {
       const n = (this.subscriptions.get(gameId) ?? 1) - 1;
       if (n <= 0) {
         this.subscriptions.delete(gameId);
-        if (this.ws?.readyState === WebSocket.OPEN) this.raw({ type: 'unsubscribe', gameId });
+        if (this.ws?.readyState === OPEN) this.raw({ type: 'unsubscribe', gameId });
       } else this.subscriptions.set(gameId, n);
     };
   }

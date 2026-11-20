@@ -74,8 +74,16 @@ packages/protocol  contrato cliente/servidor: tipos (entrada principal) + schema
 ## Campanha e app Android
 
 A campanha roda inteira no aparelho — o motor num Web Worker, o progresso no armazenamento local —
-e é o mesmo código no app da rede local (`/campanha`) e no app Android (build `VITE_TARGET=app`,
-empacotado com Capacitor). Detalhes, monetização e publicação em [ANDROID.md](ANDROID.md).
+e é o mesmo código no navegador e no app Android: nos dois, uma rota `/campanha` (no app, build
+`--mode app`, empacotado com Capacitor).
+
+No app Android o **servidor inteiro roda no aparelho**: `apps/server/src/embedded.ts` registra as mesmas
+rotas, sessões de partida, repositórios e serviço de progresso num roteador em processo, sobre SQLite
+WebAssembly (OPFS) e IA em Web Workers — os módulos de domínio do servidor não dependem do Node
+(`db/sql.ts`, `ai/runner.ts`, `db/ids.ts`). A interface fala com ele por `@dama/transport`, resolvido no
+build. Partidas entre aparelhos usam o servidor da rede local: a WebView navega até a origem dele, sem
+que as páginas do servidor recebam a ponte nativa. Ícone, ícone adaptativo e tela de abertura saem
+de uma geometria só (`apps/web/scripts/brand-icons.mjs`). Detalhes em [ANDROID.md](ANDROID.md).
 
 ## Progressão
 

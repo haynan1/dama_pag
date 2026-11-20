@@ -6,7 +6,9 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["vite/client"],
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+    // Resolvido pelo alias do vite.config conforme o destino; os dois arquivos têm a mesma forma.
+    "paths": { "@dama/transport": ["./src/lib/transport.ts"] }
   },
   "include": ["src", "test", "vite.config.ts"]
 }

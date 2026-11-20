@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Servidor HTTP/WebSocket: partidas em rede local, IA em threads, persistência SQLite.",
+  "exports": {
+    "./embedded": "./src/embedded.ts",
+    "./sql": "./src/db/sql.ts",
+    "./ai/runner": "./src/ai/runner.ts",
+    "./ai/tasks": "./src/ai/tasks.ts"
+  },
   "scripts": {
     "dev": "node --watch --env-file-if-exists=../../.env --env-file=dev.env src/main.ts",
     "start": "node --env-file-if-exists=../../.env src/main.ts",
@@ -15,11 +21,12 @@
     "@fastify/cookie": "11.1.2",
     "@fastify/helmet": "13.1.1",
     "@fastify/rate-limit": "11.2.0",
-    "@fastify/static": "10.1.5",
+    "@fastify/static": "10.1.10",
     "@fastify/websocket": "11.3.1",
-    "fastify": "5.12.5",
+    "@noble/hashes": "2.4.0",
+    "fastify": "5.12.8",
     "pino": "10.3.1",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/ws": "8.18.1",

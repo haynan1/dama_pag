@@ -12,11 +12,9 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 5_000 } },
 });
 
-// Destino decidido no build: o ramo que não é usado some do bundle.
-const Root =
-  import.meta.env.VITE_TARGET === 'app'
-    ? lazy(() => import('./campaign/CampaignApp.tsx').then((m) => ({ default: m.CampaignApp })))
-    : lazy(() => import('./App.tsx').then((m) => ({ default: m.App })));
+// O mesmo app no navegador (servidor da rede local) e no Android (servidor embutido no aparelho,
+// escolhido no build em lib/api.ts e lib/socket.ts).
+const Root = lazy(() => import('./App.tsx').then((m) => ({ default: m.App })));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

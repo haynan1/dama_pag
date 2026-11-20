@@ -1,8 +1,8 @@
 import { aiLevel, CLASSIFICATION_LABEL, type Classification, type Game } from '@dama/engine';
 import type { AchievementView, ReviewView, RewardSummary, Side } from '@dama/protocol';
-import type { Database } from '../db/database.ts';
 import type { GameRecord } from '../db/games.ts';
 import type { ProfileRepo, ProfileRow } from '../db/profiles.ts';
+import type { SqlDatabase } from '../db/sql.ts';
 import type { StudyRepo } from '../db/studies.ts';
 import {
   ACHIEVEMENTS,
@@ -28,11 +28,11 @@ export function sideAccuracy(reviews: readonly ReviewView[], side: Side): number
 }
 
 export class ProgressService {
-  private readonly db: Database;
+  private readonly db: SqlDatabase;
   private readonly profiles: ProfileRepo;
   private readonly studies: StudyRepo;
 
-  constructor(db: Database, profiles: ProfileRepo, studies: StudyRepo) {
+  constructor(db: SqlDatabase, profiles: ProfileRepo, studies: StudyRepo) {
     this.db = db;
     this.profiles = profiles;
     this.studies = studies;

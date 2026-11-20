@@ -1,6 +1,6 @@
 import { aiLevel, Game, Position, VARIANTS } from '@dama/engine';
 import type { ClientMessage, CreateGameInput, Side } from '@dama/protocol';
-import type { AiRunner } from '../ai/pool.ts';
+import type { AiRunner } from '../ai/runner.ts';
 import type { GameRecord, GameRepo } from '../db/games.ts';
 import { newId, newRoomCode, nowIso } from '../db/ids.ts';
 import type { ProfileRow } from '../db/profiles.ts';
@@ -25,12 +25,13 @@ export class GameManager {
   private readonly deps: ManagerDeps;
   private readonly sessions = new Map<string, GameSession>();
   private readonly subscriptions = new Map<Client, Set<string>>();
-  private readonly sweeper: NodeJS.Timeout;
+  private readonly sweeper: ReturnType<typeof setInterval>;
 
   constructor(deps: ManagerDeps) {
     this.deps = deps;
     this.sweeper = setInterval(() => this.evictIdle(), IDLE_EVICT_MS);
-    this.sweeper.unref();
+    // No Node, a faxina não segura o processo vivo; no navegador (app) o timer é só um número.
+    if (typeof this.sweeper === 'object') this.sweeper.unref();
   }
 
   create(profile: ProfileRow, input: CreateGameInput): GameRecord {

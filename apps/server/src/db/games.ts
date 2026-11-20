@@ -1,7 +1,7 @@
 import type { EndReason, VariantId } from '@dama/engine';
 import type { GameStatus, GameSummaryView, ReviewView, Side } from '@dama/protocol';
-import type { Database } from './database.ts';
 import { nowIso } from './ids.ts';
+import type { SqlDatabase } from './sql.ts';
 
 export interface TimeControl {
   readonly initialSec: number;
@@ -176,9 +176,9 @@ interface ReviewRow {
 }
 
 export class GameRepo {
-  private readonly db: Database;
+  private readonly db: SqlDatabase;
 
-  constructor(db: Database) {
+  constructor(db: SqlDatabase) {
     this.db = db;
   }
 
